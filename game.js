@@ -99,7 +99,7 @@ function update() {
     world.ClearForces();
     requestAnimFrame(update);
     handleInteractions();
-    checkBoundries();
+    checkBoundries(player);
     makeEnemiesFly();
 
 };
@@ -133,22 +133,21 @@ function makeEnemiesFly() {
         vel.y = Math.random() * 0;
         vel.x = Math.random() * 5;
         console.log(vel)
+
+         checkBoundries(enemies[i])
     }
 }
 
-function checkBoundries() {    
-    if (player.m_body.GetPosition().y > canvas.height / SCALE){
-       player.m_body.SetPosition(new b2Vec2(20,0),0)
-
-        //KILL PLAYER
+function checkBoundries(obj) {    
+    if (obj.m_body.GetPosition().y > canvas.height / SCALE){
+        obj.m_body.SetPosition(new b2Vec2(20,0),0)
+        //KILL obj
     }   
-    else if (player.m_body.GetPosition().x > canvas.width / SCALE) {
-        player.m_body.SetPosition(new b2Vec2(0, player.m_body.GetPosition().y)); 
-        console.log('go left')
+    else if (obj.m_body.GetPosition().x > canvas.width / SCALE) {
+        obj.m_body.SetPosition(new b2Vec2(0, obj.m_body.GetPosition().y)); 
     }
-    else if (player.m_body.GetPosition().x < 0) {
-        console.log('go right')
-        player.object.m_body.SetPosition(new b2Vec2(canvas.width / SCALE, player.object.m_body.GetPosition().y)); 
+    else if (obj.m_body.GetPosition().x < 0) {
+        obj.m_body.SetPosition(new b2Vec2(canvas.width / SCALE, obj.m_body.GetPosition().y)); 
     }
 }
 
