@@ -3,11 +3,7 @@ var ctx = canvas.getContext("2d");
 var world;
 var keys = [];
 var enemies = [];
-
-var Player = function() {  
-    this.object = null;  
-};
-var player = new Player();
+var player;
 var SCALE = 30;
 
 $(function() {
@@ -73,7 +69,7 @@ function init() {
 
     bodyDef.position.x = canvas.width / 2 / SCALE;
     bodyDef.position.y = (canvas.height / SCALE) - (20 / SCALE);
-    player.object = world.CreateBody(bodyDef).CreateFixture(fixDef);
+    player = world.CreateBody(bodyDef).CreateFixture(fixDef);
     
     setUpDebug();
 
@@ -104,6 +100,8 @@ function update() {
     requestAnimFrame(update);
     handleInteractions();
     checkBoundries();
+    makeEnemiesFly();
+
 };
 
 function handleKeyDown(evt){
@@ -114,7 +112,7 @@ function handleKeyUp(evt){
 }
 
 function handleInteractions(){
-    var vel = player.object.m_body.GetLinearVelocity();
+    var vel = player.m_body.GetLinearVelocity();
 
     // up arrow
     if (keys[38]){
@@ -129,17 +127,26 @@ function handleInteractions(){
     }
 }
 
+function makeEnemiesFly() {
+    for(var i = 0; i < enemies.length; i++) {
+        var vel = enemies[i].m_body.GetLinearVelocity();
+        vel.y = Math.random() * 0;
+        vel.x = Math.random() * 5;
+        console.log(vel)
+    }
+}
+
 function checkBoundries() {    
-    if (player.object.m_body.GetPosition().y > canvas.height / SCALE){
-       player.object.m_body.SetPosition(new b2Vec2(20,0),0)
+    if (player.m_body.GetPosition().y > canvas.height / SCALE){
+       player.m_body.SetPosition(new b2Vec2(20,0),0)
 
         //KILL PLAYER
     }   
-    else if (player.object.m_body.GetPosition().x > canvas.width / SCALE) {
-        player.object.m_body.SetPosition(new b2Vec2(0, player.object.m_body.GetPosition().y)); 
+    else if (player.m_body.GetPosition().x > canvas.width / SCALE) {
+        player.m_body.SetPosition(new b2Vec2(0, player.m_body.GetPosition().y)); 
         console.log('go left')
     }
-    else if (player.object.m_body.GetPosition().x < 0) {
+    else if (player.m_body.GetPosition().x < 0) {
         console.log('go right')
         player.object.m_body.SetPosition(new b2Vec2(canvas.width / SCALE, player.object.m_body.GetPosition().y)); 
     }
