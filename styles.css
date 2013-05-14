@@ -1,0 +1,11 @@
+html {
+    font-family: sans-serif;
+}
+
+h1 {text-align: center}
+
+canvas {
+    border:1px solid black;
+    margin: 20px auto 100px;
+    display:block;
+}
