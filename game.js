@@ -10,7 +10,7 @@ var SCALE = 30;
 var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
 
-var ground_
+var trash = [];
 
 $(function() {
     init();
@@ -41,15 +41,13 @@ function init() {
     // CREATE GROUND
     // ======================================================
     bodyDef.type = b2Body.b2_staticBody;
-
-    // positions the center of the object (not upper left!)
     bodyDef.position.x = canvas.width / 2 / SCALE;
     bodyDef.position.y = canvas.height / SCALE;
 
     fixDef.shape = new b2PolygonShape;
-
-    // half width, half height. eg actual height here is 1 unit
     fixDef.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
+    fixDef.userData = 'ground';
+
     world.CreateBody(bodyDef).CreateFixture(fixDef);
 
     
@@ -68,6 +66,8 @@ function init() {
 
         fixDef.shape = new b2PolygonShape;
         fixDef.shape.SetAsBox((150 / SCALE) / 2, (10/SCALE) / 2);
+        fixDef.userData = 'platform';
+
         world.CreateBody(bodyDef).CreateFixture(fixDef);
     }
 
@@ -75,31 +75,37 @@ function init() {
 
     // CREATE PLAYER
     // ======================================================
+    
     bodyDef.type = b2Body.b2_dynamicBody;
-    fixDef.shape = new b2PolygonShape;
-    fixDef.shape.SetAsBox(10 / SCALE, 20 / SCALE)
-
     bodyDef.position.x = canvas.width / 2 / SCALE;
     bodyDef.position.y = (canvas.height / SCALE) - (20 / SCALE);
+    bodyDef.fixedRotation = true;
+
+    fixDef.shape = new b2PolygonShape;
+    fixDef.shape.SetAsBox(10 / SCALE, 15 / SCALE)
+    fixDef.userData = 'player';
+
+    
+
     player = world.CreateBody(bodyDef).CreateFixture(fixDef);
     
-    setUpDebug();
-
 
     // CREATE ENEMIES
     // ======================================================
     for(var i = 0; i < 6; i++) {
         bodyDef.type = b2Body.b2_dynamicBody;
-        fixDef.shape = new b2PolygonShape;
-        fixDef.shape.SetAsBox(10 / SCALE, 10 / SCALE)
-
         bodyDef.position.x = Math.random() * 25;
         bodyDef.position.y = Math.random() * 25
+        
+        fixDef.shape = new b2PolygonShape;
+        fixDef.shape.SetAsBox(10 / SCALE, 10 / SCALE)
+        fixDef.userData = 'enemy' + i;
+
         enemy = world.CreateBody(bodyDef).CreateFixture(fixDef);
         enemies.push(enemy)
     }
+    
     setUpDebug();
-
 };
 
 function update() {
@@ -110,22 +116,20 @@ function update() {
     );
     world.DrawDebugData();
     world.ClearForces();
-    requestAnimFrame(update);
+    
+    renderPlayer();
     handleInteractions();
     checkBoundries(player);
     makeEnemiesFly();
+    detectCollisons();
 
     //ctx.clearRect(0, 0, canvas.width, canvas.height);
     //ctx.fillStyle = "rgb(0, 0, 0)";
     //ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // DRAW PLAYER
-    var player_pos = player.m_body.GetPosition();
     
-    ctx.save();
-    ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
-    ctx.rotate(player.m_body.GetAngle());
-    ctx.drawImage(player_sprite, -10, -20);
-    ctx.restore();
+    requestAnimFrame(update);
+
+    destroyObjects();
 
 };
 
@@ -152,6 +156,58 @@ function handleInteractions(){
     }
 }
 
+function renderPlayer() {
+    var player_pos = player.m_body.GetPosition();
+    
+    ctx.save();
+    ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
+    ctx.rotate(player.m_body.GetAngle());
+    ctx.drawImage(player_sprite, -10, -15);
+    ctx.restore();
+}
+
+function detectCollisons() {
+    var listener = new b2ContactListener;
+
+    listener.BeginContact = function(contact) {
+        // PLAYER AND GROUND / PLATFORM
+        if(contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData === 'ground' || 
+            contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData === 'platform') {
+            console.log('walking')
+        }
+
+        // PLAYER AND ENEMY
+        if(contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
+            console.log('hit enemy')
+
+            trash.push(contact.m_fixtureB.m_body);
+        }
+        
+    }
+    listener.EndContact = function(contact) {
+        // PLAYER AND GROUND / PLATFORM
+        if(contact.m_fixtureA.m_userData === 'player') {
+            console.log('flying')
+        }
+    }
+
+    listener.PostSolve = function(contact, impulse) {
+        if (contact.GetFixtureA().GetBody().GetUserData() == 'ball' || contact.GetFixtureB().GetBody().GetUserData() == 'ball') {
+            var impulse = impulse.normalImpulses[0];
+            if (impulse < 0.2) return; //threshold ignore small impacts
+            world.ball.impulse = impulse > 0.6 ? 0.5 : impulse;
+            console.log(world.ball.impulse);
+        }
+    }
+
+    listener.PreSolve = function(contact, oldManifold) {
+        // PreSolve
+    }
+
+    this.world.SetContactListener(listener);    
+
+}
+
 function makeEnemiesFly() {
     for(var i = 0; i < enemies.length; i++) {
         var vel = enemies[i].m_body.GetLinearVelocity();
@@ -172,6 +228,12 @@ function checkBoundries(obj) {
     }
     else if (obj.m_body.GetPosition().x < 0) {
         obj.m_body.SetPosition(new b2Vec2(canvas.width / SCALE, obj.m_body.GetPosition().y)); 
+    }
+}
+
+function destroyObjects() {
+    for(var i = 0; i < trash.length; i++) {
+        world.DestroyBody(trash[i]);
     }
 }
 
