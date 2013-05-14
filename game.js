@@ -43,8 +43,25 @@ function init() {
     fixDef.shape = new b2PolygonShape;
 
     // half width, half height. eg actual height here is 1 unit
-    fixDef.shape.SetAsBox((600 / SCALE) / 2, (10/SCALE) / 2);
+    fixDef.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
     world.CreateBody(bodyDef).CreateFixture(fixDef);
+
+    // CREATE PLATFORMS
+    // ======================================================
+    bodyDef.type = b2Body.b2_staticBody;
+
+    for(var i = 0; i < 6; i++) {
+        if(i % 2 === 0) {
+            bodyDef.position.x = 100 / SCALE;
+        } else {
+            bodyDef.position.x = (canvas.width / SCALE) - (100 / SCALE);
+        }
+        bodyDef.position.y = (i * 50 / SCALE) + 100 / SCALE;
+
+        fixDef.shape = new b2PolygonShape;
+        fixDef.shape.SetAsBox((150 / SCALE) / 2, (10/SCALE) / 2);
+        world.CreateBody(bodyDef).CreateFixture(fixDef);
+    }
 
     // CREATE PLAYER
     // ======================================================
