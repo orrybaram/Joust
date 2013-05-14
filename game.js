@@ -81,14 +81,13 @@ function handleKeyUp(evt){
 }
 
 function handleInteractions(){
-    // up arrow
     var vel = player.object.m_body.GetLinearVelocity();
-    
+
+    // up arrow
     if (keys[38]){
         vel.y = -6;   
     }
-    
-    // // left/right arrows
+    // left/right arrows
     if (keys[37]){
         vel.x = -5;
     }
