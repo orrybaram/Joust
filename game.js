@@ -1,10 +1,16 @@
 var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
+
 var world;
 var keys = [];
 var enemies = [];
 var player;
 var SCALE = 30;
+
+var player_sprite = new Image();
+    player_sprite.src = "images/player1.png";
+
+var ground_
 
 $(function() {
     init();
@@ -30,6 +36,8 @@ function init() {
 
     var bodyDef = new b2BodyDef;
 
+    
+
     // CREATE GROUND
     // ======================================================
     bodyDef.type = b2Body.b2_staticBody;
@@ -43,6 +51,8 @@ function init() {
     // half width, half height. eg actual height here is 1 unit
     fixDef.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
     world.CreateBody(bodyDef).CreateFixture(fixDef);
+
+    
 
     // CREATE PLATFORMS
     // ======================================================
@@ -61,17 +71,20 @@ function init() {
         world.CreateBody(bodyDef).CreateFixture(fixDef);
     }
 
+    
+
     // CREATE PLAYER
     // ======================================================
     bodyDef.type = b2Body.b2_dynamicBody;
     fixDef.shape = new b2PolygonShape;
-    fixDef.shape.SetAsBox(10 / SCALE, 10 / SCALE)
+    fixDef.shape.SetAsBox(10 / SCALE, 20 / SCALE)
 
     bodyDef.position.x = canvas.width / 2 / SCALE;
     bodyDef.position.y = (canvas.height / SCALE) - (20 / SCALE);
     player = world.CreateBody(bodyDef).CreateFixture(fixDef);
     
     setUpDebug();
+
 
     // CREATE ENEMIES
     // ======================================================
@@ -101,6 +114,18 @@ function update() {
     handleInteractions();
     checkBoundries(player);
     makeEnemiesFly();
+
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //ctx.fillStyle = "rgb(0, 0, 0)";
+    //ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // DRAW PLAYER
+    var player_pos = player.m_body.GetPosition();
+    
+    ctx.save();
+    ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
+    ctx.rotate(player.m_body.GetAngle());
+    ctx.drawImage(player_sprite, -10, -20);
+    ctx.restore();
 
 };
 
@@ -132,9 +157,8 @@ function makeEnemiesFly() {
         var vel = enemies[i].m_body.GetLinearVelocity();
         vel.y = Math.random() * 0;
         vel.x = Math.random() * 5;
-        console.log(vel)
 
-         checkBoundries(enemies[i])
+        checkBoundries(enemies[i])
     }
 }
 
