@@ -2,6 +2,8 @@ var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 var world;
 var keys = [];
+var enemies = [];
+
 var Player = function() {  
     this.object = null;  
 };
@@ -75,7 +77,21 @@ function init() {
     
     setUpDebug();
 
-}; // init()
+    // CREATE ENEMIES
+    // ======================================================
+    for(var i = 0; i < 6; i++) {
+        bodyDef.type = b2Body.b2_dynamicBody;
+        fixDef.shape = new b2PolygonShape;
+        fixDef.shape.SetAsBox(10 / SCALE, 10 / SCALE)
+
+        bodyDef.position.x = Math.random() * 25;
+        bodyDef.position.y = Math.random() * 25
+        enemy = world.CreateBody(bodyDef).CreateFixture(fixDef);
+        enemies.push(enemy)
+    }
+    setUpDebug();
+
+};
 
 function update() {
     world.Step(
