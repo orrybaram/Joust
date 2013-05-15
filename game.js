@@ -33,66 +33,17 @@ function init() {
         false                 //allow sleep
     );
 
-    var fixDef = new b2FixtureDef;
-    fixDef.density = 1.0;
-    fixDef.friction = 1;
-    fixDef.restitution = 0.2;
+    // var fixDef = new b2FixtureDef;
+    // fixDef.density = 1.0;
+    // fixDef.friction = 1;
+    // fixDef.restitution = 0.2;
 
     var bodyDef = new b2BodyDef;
 
+    createGround();
+    createPlatforms();
     
-
-    // CREATE GROUND
-    // ======================================================
-    bodyDef.type = b2Body.b2_staticBody;
-    bodyDef.position.x = canvas.width / 2 / SCALE;
-    bodyDef.position.y = canvas.height / SCALE;
-
-    fixDef.shape = new b2PolygonShape;
-    fixDef.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
-    fixDef.userData = 'ground';
-
-    world.CreateBody(bodyDef).CreateFixture(fixDef);
-
-    
-
-    // CREATE PLATFORMS
-    // ======================================================
-    bodyDef.type = b2Body.b2_staticBody;
-
-    for(var i = 0; i < 6; i++) {
-        if(i % 2 === 0) {
-            bodyDef.position.x = 100 / SCALE;
-        } else {
-            bodyDef.position.x = (canvas.width / SCALE) - (100 / SCALE);
-        }
-        bodyDef.position.y = (i * 50 / SCALE) + 100 / SCALE;
-
-        fixDef.shape = new b2PolygonShape;
-        fixDef.shape.SetAsBox((150 / SCALE) / 2, (10/SCALE) / 2);
-        fixDef.userData = 'platform';
-
-        world.CreateBody(bodyDef).CreateFixture(fixDef);
-    }
-
-    
-
-    // CREATE PLAYER
-    // ======================================================
-    
-    bodyDef.type = b2Body.b2_dynamicBody;
-    bodyDef.position.x = canvas.width / 2 / SCALE;
-    bodyDef.position.y = (canvas.height / SCALE) - (20 / SCALE);
-    bodyDef.fixedRotation = true;
-
-    fixDef.shape = new b2PolygonShape;
-    fixDef.shape.SetAsBox(10 / SCALE, 15 / SCALE)
-    fixDef.userData = 'player';
-
-    
-
-    player = world.CreateBody(bodyDef).CreateFixture(fixDef);
-    
+    createPlayer();
     createEnemies();
     
     setUpDebug();
@@ -127,25 +78,85 @@ function update() {
 
 };
 
-// CREATE ENEMIES
-    // ======================================================
-    function createEnemies() {
-        for(var i = 0; i < 6; i++) {
-            var bodyDef = new b2BodyDef;
-            var fixDef = new b2FixtureDef;
+// CREATE GROUND
+// ======================================================
+function createGround() { 
+    var groundBody = new b2BodyDef;
+    var groundFix = new b2FixtureDef;
 
-            bodyDef.type = b2Body.b2_dynamicBody;
-            bodyDef.position.x = Math.random() * 25;
-            bodyDef.position.y = Math.random() * 25
-            
-            fixDef.shape = new b2PolygonShape;
-            fixDef.shape.SetAsBox(10 / SCALE, 10 / SCALE)
-            fixDef.userData = 'enemy' + i;
+    groundBody.type = b2Body.b2_staticBody;
+    groundBody.position.x = canvas.width / 2 / SCALE;
+    groundBody.position.y = canvas.height / SCALE;
 
-            enemy = world.CreateBody(bodyDef).CreateFixture(fixDef);
-            enemies.push(enemy)
+    groundFix.shape = new b2PolygonShape;
+    groundFix.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
+    groundFix.userData = 'ground';
+
+    world.CreateBody(groundBody).CreateFixture(groundFix);
+}
+
+// CREATE PLATFORMS
+// ======================================================
+function createPlatforms() {
+    var platformBody = new b2BodyDef;
+    var platformFix = new b2FixtureDef;
+    
+    platformBody.type = b2Body.b2_staticBody;
+
+    for(var i = 0; i < 6; i++) {
+        if(i % 2 === 0) {
+            platformBody.position.x = 100 / SCALE;
+        } else {
+            platformBody.position.x = (canvas.width / SCALE) - (100 / SCALE);
         }
+        platformBody.position.y = (i * 50 / SCALE) + 100 / SCALE;
+
+        platformFix.shape = new b2PolygonShape;
+        platformFix.shape.SetAsBox((150 / SCALE) / 2, (10/SCALE) / 2);
+        platformFix.userData = 'platform';
+
+        world.CreateBody(platformBody).CreateFixture(platformFix);
     }
+}
+
+// CREATE PLAYER
+// ======================================================
+function createPlayer() {
+    var playerBody = new b2BodyDef;
+    var playerFix = new b2FixtureDef;
+
+    playerBody.type = b2Body.b2_dynamicBody;
+    playerBody.position.x = canvas.width / 2 / SCALE;
+    playerBody.position.y = (canvas.height / SCALE) - (20 / SCALE);
+    playerBody.fixedRotation = true;
+
+    playerFix.shape = new b2PolygonShape;
+    playerFix.shape.SetAsBox(10 / SCALE, 15 / SCALE)
+    playerFix.userData = 'player';
+
+    player = world.CreateBody(playerBody).CreateFixture(playerFix);
+}
+
+
+// CREATE ENEMIES
+// ======================================================
+function createEnemies() {
+    for(var i = 0; i < 6; i++) {
+        var enemyBody = new b2BodyDef;
+        var enemyFix = new b2FixtureDef;
+
+        enemyBody.type = b2Body.b2_dynamicBody;
+        enemyBody.position.x = Math.random() * 25;
+        enemyBody.position.y = Math.random() * 25
+        
+        enemyFix.shape = new b2PolygonShape;
+        enemyFix.shape.SetAsBox(10 / SCALE, 10 / SCALE)
+        enemyFix.userData = 'enemy' + i;
+
+        enemy = world.CreateBody(enemyBody).CreateFixture(enemyFix);
+        enemies.push(enemy)
+    }
+}
 
 function handleKeyDown(evt){
     keys[evt.keyCode] = true;
