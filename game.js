@@ -2,10 +2,14 @@ var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 
 var world;
-var keys = [];
+
 var enemies = [];
 var player;
+
 var SCALE = 30;
+var score = 0;
+
+var keys = [];
 
 var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
@@ -89,21 +93,7 @@ function init() {
 
     player = world.CreateBody(bodyDef).CreateFixture(fixDef);
     
-
-    // CREATE ENEMIES
-    // ======================================================
-    for(var i = 0; i < 6; i++) {
-        bodyDef.type = b2Body.b2_dynamicBody;
-        bodyDef.position.x = Math.random() * 25;
-        bodyDef.position.y = Math.random() * 25
-        
-        fixDef.shape = new b2PolygonShape;
-        fixDef.shape.SetAsBox(10 / SCALE, 10 / SCALE)
-        fixDef.userData = 'enemy' + i;
-
-        enemy = world.CreateBody(bodyDef).CreateFixture(fixDef);
-        enemies.push(enemy)
-    }
+    createEnemies();
     
     setUpDebug();
 };
@@ -131,7 +121,31 @@ function update() {
 
     destroyObjects();
 
+    updateScore();
+
+    checkStatus();
+
 };
+
+// CREATE ENEMIES
+    // ======================================================
+    function createEnemies() {
+        for(var i = 0; i < 6; i++) {
+            var bodyDef = new b2BodyDef;
+            var fixDef = new b2FixtureDef;
+
+            bodyDef.type = b2Body.b2_dynamicBody;
+            bodyDef.position.x = Math.random() * 25;
+            bodyDef.position.y = Math.random() * 25
+            
+            fixDef.shape = new b2PolygonShape;
+            fixDef.shape.SetAsBox(10 / SCALE, 10 / SCALE)
+            fixDef.userData = 'enemy' + i;
+
+            enemy = world.CreateBody(bodyDef).CreateFixture(fixDef);
+            enemies.push(enemy)
+        }
+    }
 
 function handleKeyDown(evt){
     keys[evt.keyCode] = true;
@@ -181,6 +195,9 @@ function detectCollisons() {
             console.log('hit enemy')
 
             trash.push(contact.m_fixtureB.m_body);
+
+            enemies.pop();
+            score +=1;
         }
         
     }
@@ -235,6 +252,26 @@ function destroyObjects() {
     for(var i = 0; i < trash.length; i++) {
         world.DestroyBody(trash[i]);
     }
+}
+
+
+function checkStatus() {
+    if (enemies.length === 0) {
+        showWinScreen();
+    }
+}
+
+function updateScore() {
+    $('#score').html(score);
+}
+
+function showWinScreen() {
+    console.log('YOu WON')
+    resetGame()
+}
+
+function resetGame() {
+    createEnemies();
 }
 
 function setUpDebug() {
