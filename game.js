@@ -133,6 +133,9 @@ function createPlayer() {
     playerFix.shape = new b2PolygonShape;
     playerFix.shape.SetAsBox(10 / SCALE, 15 / SCALE)
     playerFix.userData = 'player';
+    playerFix.density = 1.0;
+    playerFix.friction = 5;
+    playerFix.restitution = .5;
 
     player = world.CreateBody(playerBody).CreateFixture(playerFix);
 }
@@ -203,14 +206,29 @@ function detectCollisons() {
 
         // PLAYER AND ENEMY
         if(contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
-            console.log('hit enemy')
-
             trash.push(contact.m_fixtureB.m_body);
-
-            enemies.pop();
-            score +=1;
+            killEnemy();
+        } else if (contact.m_fixtureB.m_userData === 'player' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
+            trash.push(contact.m_fixtureA.m_body);
+            killEnemy();
         }
-        
+
+        //ENEMY AND PLATFORM
+        if(contact.m_fixtureA.m_userData === 'platform' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy' || 
+        contact.m_fixtureB.m_userData === 'platform' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
+
+            if (contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
+                vel = contact.m_fixtureA.m_body.GetLinearVelocity();
+                vel.x = vel.x * -1;
+
+                console.log('hi')
+            } else {
+                vel = contact.m_fixtureB.m_body.GetLinearVelocity();
+                vel.x = vel.x * -1;
+                console.log('yo')
+            }
+
+        }
     }
     listener.EndContact = function(contact) {
         // PLAYER AND GROUND / PLATFORM
@@ -220,12 +238,7 @@ function detectCollisons() {
     }
 
     listener.PostSolve = function(contact, impulse) {
-        if (contact.GetFixtureA().GetBody().GetUserData() == 'ball' || contact.GetFixtureB().GetBody().GetUserData() == 'ball') {
-            var impulse = impulse.normalImpulses[0];
-            if (impulse < 0.2) return; //threshold ignore small impacts
-            world.ball.impulse = impulse > 0.6 ? 0.5 : impulse;
-            console.log(world.ball.impulse);
-        }
+        // console.log(contact + impulse)
     }
 
     listener.PreSolve = function(contact, oldManifold) {
@@ -249,7 +262,7 @@ function makeEnemiesFly() {
 function checkBoundries(obj) {    
     if (obj.m_body.GetPosition().y > canvas.height / SCALE){
         obj.m_body.SetPosition(new b2Vec2(20,0),0)
-        //KILL obj
+        //KILL PLAYER
     }   
     else if (obj.m_body.GetPosition().x > canvas.width / SCALE) {
         obj.m_body.SetPosition(new b2Vec2(0, obj.m_body.GetPosition().y)); 
@@ -283,6 +296,12 @@ function showWinScreen() {
 
 function resetGame() {
     createEnemies();
+}
+
+function killEnemy(x) {
+    console.log('hit enemy')
+    enemies.pop();
+    score +=1;
 }
 
 function setUpDebug() {
