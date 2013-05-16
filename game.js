@@ -164,14 +164,13 @@ function createEnemies() {
         
         enemyFix.shape = new b2PolygonShape;
         enemyFix.shape.SetAsBox(10 / SCALE, 10 / SCALE)
+        enemyFix.restitution = 2;
         enemyFix.userData = 'enemy' + i;
 
         enemy = new Enemy();
 
         enemy.box2d = world.CreateBody(enemyBody).CreateFixture(enemyFix);
         enemies.push(enemy)
-
-        console.log(enemy)
     }
 }
 
@@ -227,14 +226,48 @@ function detectCollisons() {
 
         //ENEMY AND PLATFORM
         if(contact.m_fixtureA.m_userData === 'platform' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy' || 
-        contact.m_fixtureB.m_userData === 'platform' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
+        contact.m_fixtureB.m_userData === 'platform' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy' ||
+        contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
 
             if (contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
-                // flipDirection += 1;
-            } else {
-                // flipDirection += 1;
-            }
+                for(var i = 0; i < enemies.length; i++) {
+                    if (enemies[i].box2d.m_userData === contact.m_fixtureA.m_userData) {
+                        enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+                    }
+                }
 
+            } else {
+                for(var i = 0; i < enemies.length; i++) {
+                    if (enemies[i].box2d.m_userData === contact.m_fixtureB.m_userData) {
+                        enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+                    }
+                }
+            }
+        }
+
+        // ENEMY and ENEMY COLLISION
+        // make them go opposite directions
+        if(contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
+            for(var i = 0; i < enemies.length; i++) {
+                if (enemies[i].box2d.m_userData === contact.m_fixtureA.m_userData) {
+                    var enemyA = enemies[i];
+
+                }
+                if (enemies[i].box2d.m_userData === contact.m_fixtureB.m_userData) {
+                    var enemyB = enemies[i];
+                }
+
+                if (enemyA !== undefined && enemyB !== undefined) {
+                    if(enemyA.direction === 'left') { 
+                        enemyA.direction = 'left'; 
+                        enemyB.direction = 'right'
+                    } else {
+                        enemyA.direction = 'right'; 
+                        enemyB.direction = 'left';
+                    }
+                }
+                
+            }
         }
     }
     listener.EndContact = function(contact) {
@@ -261,9 +294,11 @@ function makeEnemiesFly() {
         
         var vel = enemies[i].box2d.m_body.GetLinearVelocity();
         vel.y = Math.random() * 0;
-        
-        vel.x = Math.random() * 5;
-            
+        if(enemies[i].direction === 'right') {
+            vel.x = Math.random() * 5;
+        } else {
+            vel.x = Math.random() * -5;
+        }
         checkBoundries(enemies[i])
     }
 }
@@ -310,9 +345,8 @@ function resetGame() {
 function killEnemy(enemy) {
     // console.log(enemy.m_userData)
     for(var i = 0; i < enemies.length; i++ ) {
-        if (enemies[i].m_userData === enemy.m_userData) {
+        if (enemies[i].box2d.m_userData === enemy.m_userData) {
             enemies.splice(i, 1);
-            console.log(enemies)
         }
     }
     score +=1;
