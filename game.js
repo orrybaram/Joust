@@ -48,6 +48,9 @@ function init() {
     setUpDebug();
 
     flapTheWings();
+
+    setInterval(changeFlapSpeed, 1000)
+
 };
 
 function update() {
@@ -188,7 +191,7 @@ function createEnemies() {
         enemy = new Enemy();
 
         enemy.box2d = world.CreateBody(enemyBody).CreateFixture(enemyFix);
-        enemy.flapSpeed = (Math.random() * 300) + 200;
+        enemy.flapSpeed = (Math.random() * 500) + 300;
 
         enemies.push(enemy)
     }
@@ -323,10 +326,18 @@ function makeEnemyFly(enemy) {
 function flapTheWings() {
     for(var i = 0; i < enemies.length; i++) {
         setInterval(function(x) {
-            console.log(enemies[x]);
-            makeEnemyFly(enemies[x]);
+            if(enemies[x] !== undefined) {
+                console.log(enemies[x]);
+                makeEnemyFly(enemies[x]);
+            }
 
-        }, enemy.flapSpeed, i);
+        }, enemies[i].flapSpeed, i);
+    }
+}
+
+function changeFlapSpeed() {
+    for(var i = 0; i < enemies.length; i++) {
+        enemies[i].flapSpeed = (Math.random() * 1000) + 100;
     }
 }
 
