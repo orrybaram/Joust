@@ -66,7 +66,6 @@ function update() {
     renderPlayer();
     handleInteractions();
     checkBoundries(player);
-    checkBoundries(enemy);
     detectCollisons();
     
     //ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -101,7 +100,7 @@ function createCeiling() {
 
     ceilingBody.type = b2Body.b2_staticBody;
     ceilingBody.position.x = canvas.width / 2 / SCALE;
-    ceilingBody.position.y = 0 - 50 / SCALE;
+    ceilingBody.position.y = 0 - 20 / SCALE;
 
     ceilingFix.shape = new b2PolygonShape;
     ceilingFix.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
@@ -189,7 +188,7 @@ function createEnemies() {
         enemy = new Enemy();
 
         enemy.box2d = world.CreateBody(enemyBody).CreateFixture(enemyFix);
-        enemy.flapSpeed = (Math.random() * 300) + 500;
+        enemy.flapSpeed = (Math.random() * 300) + 200;
 
         enemies.push(enemy)
     }
@@ -318,20 +317,16 @@ function makeEnemyFly(enemy) {
         } else {
             vel.x = (Math.random() * 2) + 2;
         }
-        
+        checkBoundries(enemy)
 }
 
 function flapTheWings() {
     for(var i = 0; i < enemies.length; i++) {
         setInterval(function(x) {
-            
+            console.log(enemies[x]);
             makeEnemyFly(enemies[x]);
-            enemies[x].flapSpeed = (Math.random() * 300) + 500;
-            console.log(enemies[x])
-            //flapTheWings();
-        
-        }, enemy.flapSpeed, i);
 
+        }, enemy.flapSpeed, i);
     }
 }
 
