@@ -34,17 +34,20 @@ $(function() {
 
 function init() {
     world = new b2World(
-        new b2Vec2(0, 10),    //gravity
+        new b2Vec2(0, 8),    //gravity
         false                 //allow sleep
     );
 
-    createGround();
+    createCeiling();
     createPlatforms();
+    createGround();
     
     createPlayer();
     createEnemies();
     
     setUpDebug();
+
+    flapTheWings();
 };
 
 function update() {
@@ -63,16 +66,14 @@ function update() {
     renderPlayer();
     handleInteractions();
     checkBoundries(player);
+    checkBoundries(enemy);
     detectCollisons();
-    makeEnemiesFly();
-
+    
     //ctx.clearRect(0, 0, canvas.width, canvas.height);
     //ctx.fillStyle = "rgb(0, 0, 0)";
     //ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     requestAnimFrame(update);
-    
-
 };
 
 // CREATE GROUND
@@ -90,6 +91,23 @@ function createGround() {
     groundFix.userData = 'ground';
 
     world.CreateBody(groundBody).CreateFixture(groundFix);
+}
+
+// CREATE FLIGHT CEILING
+// ======================================================
+function createCeiling() { 
+    var ceilingBody = new b2BodyDef;
+    var ceilingFix = new b2FixtureDef;
+
+    ceilingBody.type = b2Body.b2_staticBody;
+    ceilingBody.position.x = canvas.width / 2 / SCALE;
+    ceilingBody.position.y = 0 - 50 / SCALE;
+
+    ceilingFix.shape = new b2PolygonShape;
+    ceilingFix.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
+    ceilingFix.userData = 'ceiling';
+
+    world.CreateBody(ceilingBody).CreateFixture(ceilingFix);
 }
 
 // CREATE PLATFORMS
@@ -149,7 +167,8 @@ function createPlayer() {
 
 function Enemy() {
     this.box2d = {},
-    this.direction = 'right'
+    this.direction = 'right';
+    this.flapSpeed = 0;
 }
 
 function createEnemies() {
@@ -164,12 +183,14 @@ function createEnemies() {
         
         enemyFix.shape = new b2PolygonShape;
         enemyFix.shape.SetAsBox(10 / SCALE, 10 / SCALE)
-        enemyFix.restitution = 2;
+        enemyFix.restitution = .5;
         enemyFix.userData = 'enemy' + i;
 
         enemy = new Enemy();
 
         enemy.box2d = world.CreateBody(enemyBody).CreateFixture(enemyFix);
+        enemy.flapSpeed = (Math.random() * 300) + 500;
+
         enemies.push(enemy)
     }
 }
@@ -289,17 +310,28 @@ function detectCollisons() {
 
 }
 
-function makeEnemiesFly() {
-    for(var i = 0; i < enemies.length; i++) {
-        
-        var vel = enemies[i].box2d.m_body.GetLinearVelocity();
-        vel.y = Math.random() * 0;
-        if(enemies[i].direction === 'right') {
-            vel.x = Math.random() * 5;
+function makeEnemyFly(enemy) {
+        var vel = enemy.box2d.m_body.GetLinearVelocity();
+        vel.y = (Math.random() * -1) - 1.5;
+        if(enemy.direction === 'right') {
+            vel.x = (Math.random() * -2) -2;
         } else {
-            vel.x = Math.random() * -5;
+            vel.x = (Math.random() * 2) + 2;
         }
-        checkBoundries(enemies[i])
+        
+}
+
+function flapTheWings() {
+    for(var i = 0; i < enemies.length; i++) {
+        setInterval(function(x) {
+            
+            makeEnemyFly(enemies[x]);
+            enemies[x].flapSpeed = (Math.random() * 300) + 500;
+            console.log(enemies[x])
+            //flapTheWings();
+        
+        }, enemy.flapSpeed, i);
+
     }
 }
 
@@ -307,7 +339,8 @@ function checkBoundries(obj) {
     if (obj.box2d.m_body.GetPosition().y > canvas.height / SCALE){
         obj.box2d.m_body.SetPosition(new b2Vec2(20,0),0)
         //KILL PLAYER
-    }   
+    }
+
     else if (obj.box2d.m_body.GetPosition().x > canvas.width / SCALE) {
         obj.box2d.m_body.SetPosition(new b2Vec2(0, obj.box2d.m_body.GetPosition().y)); 
     }
