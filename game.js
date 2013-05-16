@@ -1,24 +1,28 @@
+//       ____.________   ____ ___  ____________________
+//      |    |\_____  \ |    |   \/   _____/\__    ___/
+//      |    | /   |   \|    |   /\_____  \   |    |   
+//  /\__|    |/    |    \    |  / /        \  |    |   
+//  \________|\_______  /______/ /_______  /  |____|   
+//                    \/                 \/            
+
 var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 
 var world;
-
 var enemies = [];
+
 var player;
-
-var SCALE = 30;
-var score = 0;
-
-var keys = [];
-
 var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
 
+var score = 0;
+var SCALE = 30;
+var keys = [];
 var trash = [];
 
 $(function() {
     init();
-    requestAnimFrame(update);
+    update();
 
     window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('keyup', handleKeyUp, true);
@@ -32,13 +36,6 @@ function init() {
         new b2Vec2(0, 10),    //gravity
         false                 //allow sleep
     );
-
-    // var fixDef = new b2FixtureDef;
-    // fixDef.density = 1.0;
-    // fixDef.friction = 1;
-    // fixDef.restitution = 0.2;
-
-    var bodyDef = new b2BodyDef;
 
     createGround();
     createPlatforms();
@@ -58,23 +55,22 @@ function update() {
     world.DrawDebugData();
     world.ClearForces();
     
+    destroyObjects();
+    updateScore();
+    checkStatus();
+
     renderPlayer();
     handleInteractions();
     checkBoundries(player);
-    makeEnemiesFly();
     detectCollisons();
+    makeEnemiesFly();
 
     //ctx.clearRect(0, 0, canvas.width, canvas.height);
     //ctx.fillStyle = "rgb(0, 0, 0)";
     //ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     requestAnimFrame(update);
-
-    destroyObjects();
-
-    updateScore();
-
-    checkStatus();
+    
 
 };
 
@@ -170,17 +166,15 @@ function handleKeyUp(evt){
 
 function handleInteractions(){
     var vel = player.m_body.GetLinearVelocity();
-
-    // up arrow
-    if (keys[38]){
-        vel.y = -6;   
+    
+    if (keys[38]) {  
+        vel.y = -6;   // up
     }
-    // left/right arrows
-    if (keys[37]){
-        vel.x = -5;
+    if (keys[37]) {
+        vel.x = -5;   // left
     }
-    else if (keys[39]){
-        vel.x = 5;
+    else if (keys[39]) {
+        vel.x = 5;    // right
     }
 }
 
@@ -207,10 +201,10 @@ function detectCollisons() {
         // PLAYER AND ENEMY
         if(contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
             trash.push(contact.m_fixtureB.m_body);
-            killEnemy();
+            killEnemy(contact.m_fixtureB);
         } else if (contact.m_fixtureB.m_userData === 'player' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
             trash.push(contact.m_fixtureA.m_body);
-            killEnemy();
+            killEnemy(contact.m_fixtureA);
         }
 
         //ENEMY AND PLATFORM
@@ -274,10 +268,10 @@ function checkBoundries(obj) {
 
 function destroyObjects() {
     for(var i = 0; i < trash.length; i++) {
+        // console.log(trash[i])
         world.DestroyBody(trash[i]);
     }
 }
-
 
 function checkStatus() {
     if (enemies.length === 0) {
@@ -298,9 +292,14 @@ function resetGame() {
     createEnemies();
 }
 
-function killEnemy(x) {
-    console.log('hit enemy')
-    enemies.pop();
+function killEnemy(enemy) {
+    // console.log(enemy.m_userData)
+    for(var i = 0; i < enemies.length; i++ ) {
+        if (enemies[i].m_userData === enemy.m_userData) {
+            enemies.splice(i, 1);
+            console.log(enemies)
+        }
+    }
     score +=1;
 }
 
