@@ -9,16 +9,17 @@ var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 
 var world;
-var enemies = [];
 
 var player;
 var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
+var enemies = [];
 
 var score = 0;
 var SCALE = 30;
 var keys = [];
 var trash = [];
+
 
 $(function() {
     init();
@@ -117,6 +118,10 @@ function createPlatforms() {
 
 // CREATE PLAYER
 // ======================================================
+function Player() {
+    this.box2d = {};
+}
+
 function createPlayer() {
     var playerBody = new b2BodyDef;
     var playerFix = new b2FixtureDef;
@@ -133,14 +138,23 @@ function createPlayer() {
     playerFix.friction = 5;
     playerFix.restitution = .5;
 
-    player = world.CreateBody(playerBody).CreateFixture(playerFix);
+    player = new Player();
+
+    player.box2d = world.CreateBody(playerBody).CreateFixture(playerFix);
 }
 
 
 // CREATE ENEMIES
 // ======================================================
+
+function Enemy() {
+    this.box2d = {},
+    this.direction = 'right'
+}
+
 function createEnemies() {
     for(var i = 0; i < 6; i++) {
+        
         var enemyBody = new b2BodyDef;
         var enemyFix = new b2FixtureDef;
 
@@ -152,8 +166,12 @@ function createEnemies() {
         enemyFix.shape.SetAsBox(10 / SCALE, 10 / SCALE)
         enemyFix.userData = 'enemy' + i;
 
-        enemy = world.CreateBody(enemyBody).CreateFixture(enemyFix);
+        enemy = new Enemy();
+
+        enemy.box2d = world.CreateBody(enemyBody).CreateFixture(enemyFix);
         enemies.push(enemy)
+
+        console.log(enemy)
     }
 }
 
@@ -165,7 +183,7 @@ function handleKeyUp(evt){
 }
 
 function handleInteractions(){
-    var vel = player.m_body.GetLinearVelocity();
+    var vel = player.box2d.m_body.GetLinearVelocity();
     
     if (keys[38]) {  
         vel.y = -6;   // up
@@ -179,11 +197,11 @@ function handleInteractions(){
 }
 
 function renderPlayer() {
-    var player_pos = player.m_body.GetPosition();
+    var player_pos = player.box2d.m_body.GetPosition();
     
     ctx.save();
     ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
-    ctx.rotate(player.m_body.GetAngle());
+    ctx.rotate(player.box2d.m_body.GetAngle());
     ctx.drawImage(player_sprite, -10, -15);
     ctx.restore();
 }
@@ -212,14 +230,9 @@ function detectCollisons() {
         contact.m_fixtureB.m_userData === 'platform' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
 
             if (contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
-                vel = contact.m_fixtureA.m_body.GetLinearVelocity();
-                vel.x = vel.x * -1;
-
-                console.log('hi')
+                // flipDirection += 1;
             } else {
-                vel = contact.m_fixtureB.m_body.GetLinearVelocity();
-                vel.x = vel.x * -1;
-                console.log('yo')
+                // flipDirection += 1;
             }
 
         }
@@ -245,24 +258,26 @@ function detectCollisons() {
 
 function makeEnemiesFly() {
     for(var i = 0; i < enemies.length; i++) {
-        var vel = enemies[i].m_body.GetLinearVelocity();
+        
+        var vel = enemies[i].box2d.m_body.GetLinearVelocity();
         vel.y = Math.random() * 0;
+        
         vel.x = Math.random() * 5;
-
+            
         checkBoundries(enemies[i])
     }
 }
 
 function checkBoundries(obj) {    
-    if (obj.m_body.GetPosition().y > canvas.height / SCALE){
-        obj.m_body.SetPosition(new b2Vec2(20,0),0)
+    if (obj.box2d.m_body.GetPosition().y > canvas.height / SCALE){
+        obj.box2d.m_body.SetPosition(new b2Vec2(20,0),0)
         //KILL PLAYER
     }   
-    else if (obj.m_body.GetPosition().x > canvas.width / SCALE) {
-        obj.m_body.SetPosition(new b2Vec2(0, obj.m_body.GetPosition().y)); 
+    else if (obj.box2d.m_body.GetPosition().x > canvas.width / SCALE) {
+        obj.box2d.m_body.SetPosition(new b2Vec2(0, obj.box2d.m_body.GetPosition().y)); 
     }
-    else if (obj.m_body.GetPosition().x < 0) {
-        obj.m_body.SetPosition(new b2Vec2(canvas.width / SCALE, obj.m_body.GetPosition().y)); 
+    else if (obj.box2d.m_body.GetPosition().x < 0) {
+        obj.box2d.m_body.SetPosition(new b2Vec2(canvas.width / SCALE, obj.box2d.m_body.GetPosition().y)); 
     }
 }
 
