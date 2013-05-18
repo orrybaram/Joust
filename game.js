@@ -1,9 +1,11 @@
-//       ____.________   ____ ___  ____________________
-//      |    |\_____  \ |    |   \/   _____/\__    ___/
-//      |    | /   |   \|    |   /\_____  \   |    |   
-//  /\__|    |/    |    \    |  / /        \  |    |   
-//  \________|\_______  /______/ /_______  /  |____|   
-//                    \/                 \/            
+/* =============================================================
+         ____.________   ____ ___  ____________________
+        |    |\_____  \ |    |   \/   _____/\__    ___/
+        |    | /   |   \|    |   /\_____  \   |    |   
+    /\__|    |/    |    \    |  / /        \  |    |   
+    \________|\_______  /______/ /_______  /  |____|   
+                      \/                 \/            
+============================================================= */
 
 var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
@@ -176,9 +178,12 @@ function Enemy() {
 function createEnemies() {
     for(var i = 0; i < 6; i++) {
         
+        var enemy = enemy = new Enemy();
         var enemyBody = new b2BodyDef;
         var enemyFix = new b2FixtureDef;
         var enemyFix2 = new b2FixtureDef;
+
+
 
         enemyBody.type = b2Body.b2_dynamicBody;
         enemyBody.position.x = Math.random() * 25;
@@ -188,15 +193,16 @@ function createEnemies() {
         enemyFix.shape.SetAsBox(10 / SCALE, 10 / SCALE)
         
         enemyFix2.shape = new b2PolygonShape;
-        enemyFix2.shape.SetAsBox(100 / SCALE, 100 / SCALE, b2Vec2(-1 + 0.1, 1))
+        enemyFix2.shape.SetAsBox(2 / SCALE, 2 / SCALE, b2Vec2(-1 + 0.1, 1))
 
         enemyFix.restitution = .5;
         enemyFix.userData = 'enemy' + i;
+        
+        enemy.box2d = world.CreateBody(enemyBody);
 
+        enemy.box2d.CreateFixture(enemyFix);
+        enemy.box2d.CreateFixture(enemyFix2);
 
-        enemy = new Enemy();
-
-        enemy.box2d = world.CreateBody(enemyBody).CreateFixture(enemyFix, enemyFix2)
         enemy.flapSpeed = (Math.random() * 500) + 300;
 
         enemies.push(enemy)
