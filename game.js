@@ -196,12 +196,22 @@ function createEnemies() {
         enemyBody.position.y = Math.random() * 25;
         
         enemyHead.shape = new b2PolygonShape;
-        enemyHead.shape.SetAsArray([{x:0, y:0},{x:.5, y:0},{x:.5, y:.25},{x:0, y:.25}], 4);
+        enemyHead.shape.SetAsArray([
+            {x:0 / SCALE, y:0 / SCALE}, 
+            {x:14 / SCALE, y:0 / SCALE},
+            {x:14 / SCALE, y:10 / SCALE}, 
+            {x:0 / SCALE, y:10 / SCALE}
+        ], 4);
         enemyHead.shape.m_centroid.Set(59,100);
         enemyHead.userData = {id: i, type: 'enemy', part: 'head'}
 
         enemyBottom.shape = new b2PolygonShape;
-        enemyBottom.shape.SetAsArray([{x:0, y:.25},{x:.5, y:.205},{x:.5, y:1},{x:0, y:1}], 4);
+        enemyBottom.shape.SetAsArray([
+            {x:-1 / SCALE, y:10 / SCALE}, 
+            {x:15 / SCALE, y:10 / SCALE},
+            {x:15 / SCALE, y:20 / SCALE}, 
+            {x:-1 / SCALE, y:20 / SCALE}
+        ], 4);
         enemyBottom.shape.m_centroid.Set(0,0);
         enemyBottom.userData = {id: i, type: 'enemy', part: 'body'}
         enemyBottom.restitution = .6;
