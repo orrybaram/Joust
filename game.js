@@ -162,8 +162,10 @@ function createPlatforms() {
 function Player() {
     this.box2d = {};
     this.direction = 'up';
-    this.sprite = new Image();
+    this.ostridge = new Image();
+    this.dude = new Image();
     this.is_flying = false;
+    this.flap_wings = false;
 }
 
 function createPlayer() {
@@ -289,26 +291,32 @@ function handleInteractions(){
     var vel = player.box2d.GetLinearVelocity();
     
     if (keys[38]) {  
-        vel.y = -4;   // up
+        vel.y = -3.5;   // up
+        player.flap_wings = true;
     }
     if (keys[37]) {
-        vel.x = -5;   // left
+        vel.x = -3.5;   // left
         player.direction = 'left';
     }
     else if (keys[39]) {
-        vel.x = 5;    // right
+        vel.x = 3.5;    // right
         player.direction = 'right'
     }
 }
 
 function renderPlayer() {
     var player_pos = player.box2d.GetPosition();
-    player.sprite.src = "images/white-ostridge/walk1.png";
-    
+
+    player.ostridge.src = "images/white-ostridge/walk1.png";
+    player.dude.src = "images/dude/yellow.png";
      //console.log(player.is_flying)
     
     if (player.is_flying) {
-        player.sprite.src = "images/white-ostridge/fly1.png";
+        if (player.flap_wings) {
+            player.ostridge.src = "images/white-ostridge/fly1.png";
+        } else {
+            player.ostridge.src = "images/white-ostridge/fly2.png";
+        }
     }
 
     ctx.save();
@@ -318,19 +326,30 @@ function renderPlayer() {
     if(player.direction === 'left') {
         ctx.scale(-1, 1);
         ctx.drawImage(
-        player.sprite,     //image
-            -17, 0,        // source position
-            22, 34         // width/height
+            player.dude,         //image
+            -16, -2,              // source position
+            24, 14               // width/height
+        );
+        ctx.drawImage(
+            player.ostridge,     //image
+            -17, 0,              // source position
+            22, 34               // width/height
         );
     } else {
         ctx.drawImage(
-            player.sprite,   //image
+            player.dude,         //image
+            0, -2,              // source position
+            24, 14               // width/height
+        );
+        ctx.drawImage(
+            player.ostridge,   //image
             -3, 0,           // source position
             22, 34           // width/height
         );
+        
     }
-    
     ctx.restore();
+    player.flap_wings = false;
 }
 
 function renderEnemy() {
@@ -369,7 +388,6 @@ function detectCollisons() {
                 fixtureB.type === 'player' && fixtureA === 'ground' || 
                 fixtureB.type === 'player' && fixtureA === 'platform') {
                 player.is_flying = false;
-                console.log('walking')
             }
 
             // PLAYER AND ENEMY HEAD --- KILLS ENEMY!
@@ -432,7 +450,7 @@ function detectCollisons() {
     listener.EndContact = function(contact) {
         var fixtureA = contact.m_fixtureA.m_userData;
         var fixtureB = contact.m_fixtureB.m_userData;
-        console.log(contact)
+        
         if (fixtureA !== null && fixtureB !== null) {
 
             // PLAYER AND GROUND / PLATFORM
@@ -441,7 +459,6 @@ function detectCollisons() {
                 fixtureB.type === 'player' && fixtureA === 'ground' || 
                 fixtureB.type === 'player' && fixtureA === 'platform') {
                 player.is_flying = true;
-                console.log('walking')
             }
         }
     }
