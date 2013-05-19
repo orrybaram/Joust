@@ -13,13 +13,15 @@ var ctx = canvas.getContext("2d");
 var world;
 
 var player;
-var player_alive = true;
+var player_alive;
 var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
-var player_name = "";
 
-var lives = 3;
-var level = 1;
+var player_name = "";
+var high_score = 0;
+
+var lives;
+var level;
 var enemies = [];
 
 var score = 0;
@@ -42,8 +44,13 @@ $(function() {
 function init() {
     world = new b2World(
         new b2Vec2(0, 4),    //gravity
-        false                 //allow sleep
+        false                //allow sleep
     );
+
+    level = 1;
+    lives = 3;
+    player_alive = true;
+    high_score = localStorage['high_score'];
 
     createCeiling();
     createPlatforms();
@@ -53,8 +60,15 @@ function init() {
     
     setUpDebug();
 
-    player_name = prompt('What\'s your name?');
-    localStorage['player_name'] = player_name;
+    if (localStorage['player_name'] === "null") {
+        player_name = prompt('What\'s your name?');
+        localStorage['player_name'] = player_name;
+    } else {
+        player_name = localStorage['player_name'];
+    }
+
+    updatePlayerInfo();
+    
 };
 
 function update() {
@@ -83,6 +97,10 @@ function update() {
 
     requestAnimFrame(update);
 };
+
+function reset() {
+    world = null;
+}
 
 // CREATE GROUND
 // ======================================================
@@ -441,6 +459,11 @@ function updateLevel() {
     $('#level span').html(level);
 }
 
+function updatePlayerInfo() {
+    $('#player-name').html(player_name);
+    $('#high-score').html(high_score);
+}
+
 function renderNextLevel() {
     level += 1;
     initEnemies(level);
@@ -464,28 +487,33 @@ function killEnemy(enemy) {
 }
 
 function killPlayer(enemy) {
-    updateLives();
     lives -= 1;
-
+    updateLives();
+    
     if(lives > 0) {
         trash.push(player.box2d)
         player_alive = false;
         resetPlayer();
+    
+    // GAME OVER
     } else {
-        alert('Sorry ' + player_name + " ,you lose... Your score is " + score);
-        level = 1;
-        lives = 3;
-        score = 0;
-        enemies = [];
-        updateLevel();
-        updateLives();
-        updateScore();
-        for(var i = 0; i < enemies.length; i++) {
-            trash.push(enemies[i].box2d)
-        }
-        setTimeout(function(){initEnemies(level)}, 500);
+        console.log('Sorry ' + player_name + " ,you lose... Your score is " + score + ".");
         
+        if(score > localStorage['high_score'] || !localStorage['high_score']) {
+            console.log('New high score!!')
+            localStorage['high_score'] = score;
+        }
+        
+        endGame();
+
     }
+}
+
+function endGame() {
+    trash.push(player.box2d)
+    player_alive = false;
+    lives = 0;
+    console.log('Game Over')
 }
 
 function initEnemies(level) {
