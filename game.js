@@ -170,37 +170,35 @@ function createPlayer() {
 // CREATE ENEMIES
 // ======================================================
 
-function Enemy() {
+function Enemy(id) {
     this.box2d = {},
     this.direction = 'right';
     this.flapSpeed = 0;
+    this.id = id;
 }
 
 function createEnemies() {
     for(var i = 0; i < 6; i++) {
         
-        var enemy = enemy = new Enemy();
+        var enemy = new Enemy(i);
         var enemyBody = new b2BodyDef;
         var enemyBottom = new b2FixtureDef;
         var enemyHead = new b2FixtureDef;
 
         enemyBody.type = b2Body.b2_dynamicBody;
         enemyBody.position.x = Math.random() * 25;
-        enemyBody.position.y = Math.random() * 25
+        enemyBody.position.y = Math.random() * 25;
         
-        
-
         enemyHead.shape = new b2PolygonShape;
         enemyHead.shape.SetAsArray([{x:0, y:0},{x:.5, y:0},{x:.5, y:.25},{x:0, y:.25}], 4);
         enemyHead.shape.m_centroid.Set(59,100);
-        enemyHead.restitution = .5;
-        enemyHead.userData = 'enemyHead' + i;
+        enemyHead.userData = {id: i, type: 'enemy', part: 'head'}
 
         enemyBottom.shape = new b2PolygonShape;
         enemyBottom.shape.SetAsArray([{x:0, y:.25},{x:.5, y:.205},{x:.5, y:1},{x:0, y:1}], 4);
         enemyBottom.shape.m_centroid.Set(0,0);
-        enemyBottom.restitution = .5;
-        enemyBottom.userData = 'enemyBottom' + i;
+        enemyBottom.userData = {id: i, type: 'enemy', part: 'body'}
+        enemyBottom.restitution = .6;
 
         enemy.box2d = world.CreateBody(enemyBody);
         enemy.box2d.CreateFixture(enemyHead);
@@ -248,7 +246,7 @@ function detectCollisons() {
     var listener = new b2ContactListener;
 
     listener.BeginContact = function(contact) {
-    
+
         var fixtureA = contact.m_fixtureA.m_userData;
         var fixtureB = contact.m_fixtureB.m_userData;
 
@@ -261,28 +259,27 @@ function detectCollisons() {
             }
 
             // PLAYER AND ENEMY
-            if(fixtureA === 'player' && fixtureB.slice(0, 9) === 'enemyHead') {
+            if(fixtureA === 'player' && fixtureB.part === 'head') {
                 trash.push(contact.m_fixtureB.m_body);
                 killEnemy(contact.m_fixtureB);
-            } else if (fixtureB === 'player' && fixtureA.slice(0, 9) === 'enemyHead') {
+            } else if (fixtureB === 'player' && fixtureA.part === 'head') {
                 trash.push(contact.m_fixtureA.m_body);
                 killEnemy(contact.m_fixtureA);
             }
 
             //ENEMY AND PLATFORM
-            if(fixtureA === 'platform' && fixtureB.slice(0, 5) === 'enemy' || 
-            fixtureB === 'platform' && fixtureA.slice(0, 5) === 'enemy') {
+            if(fixtureA === 'platform' && fixtureB.type === 'enemy' || 
+            fixtureB === 'platform' && fixtureA.type === 'enemy') {
 
-                if (fixtureA.slice(0, 5) === 'enemy') {
+                if (fixtureA.type === 'enemy') {
                     for(var i = 0; i < enemies.length; i++) {
-                        if (enemies[i].box2d.m_userData === fixtureA) {
+                        if (enemies[i].id === fixtureA.id) {
                             enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
                         }
                     }
-
                 } else {
                     for(var i = 0; i < enemies.length; i++) {
-                        if (enemies[i].box2d.m_userData === fixtureB) {
+                        if (enemies[i].id === fixtureB.id) {
                             enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
                         }
                     }
@@ -290,24 +287,28 @@ function detectCollisons() {
             }
 
             // ENEMY and ENEMY COLLISION
-            // make them go opposite directions
-            if(fixtureA.slice(0, 5) === 'enemy' && fixtureB.slice(0, 5) === 'enemy') {
+            
+            // check to see that both fixtures are are enemies
+            if(fixtureA.type === 'enemy' && fixtureB.type === 'enemy') {
                 for(var i = 0; i < enemies.length; i++) {
-                    if (enemies[i].box2d.m_userData === fixtureA) {
-                        var enemyA = enemies[i];
+                    
 
+
+                    if (enemies[i].id === fixtureA.id) {
+                        var enemyA = enemies[i];
                     }
-                    if (enemies[i].box2d.m_userData === fixtureB) {
+                    if (enemies[i].id === fixtureB.id) {
                         var enemyB = enemies[i];
                     }
 
+                    
+
                     if (enemyA !== undefined && enemyB !== undefined) {
+                        
                         if(enemyA.direction === 'left') { 
-                            enemyA.direction = 'left'; 
-                            enemyB.direction = 'right'
-                        } else {
                             enemyA.direction = 'right'; 
-                            enemyB.direction = 'left';
+                        } else {
+                            enemyA.direction = 'left'; 
                         }
                     }
                     
@@ -378,7 +379,6 @@ function checkBoundries(obj) {
 
 function destroyObjects() {
     for(var i = 0; i < trash.length; i++) {
-        // console.log(trash[i])
         world.DestroyBody(trash[i]);
     }
 }
@@ -394,7 +394,6 @@ function updateScore() {
 }
 
 function showWinScreen() {
-    console.log('YOu WON')
     resetGame()
 }
 
