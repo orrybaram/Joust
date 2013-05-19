@@ -148,22 +148,47 @@ function createPlayer() {
     player = new Player();
 
     var playerBody = new b2BodyDef;
-    var playerFix = new b2FixtureDef;
+    var playerHead = new b2FixtureDef;
+    var playerTorso = new b2FixtureDef;
+    var playerLegs = new b2FixtureDef;
 
     playerBody.type = b2Body.b2_dynamicBody;
     playerBody.position.x = canvas.width / 2 / SCALE;
-    playerBody.position.y = (canvas.height / SCALE) - (20 / SCALE);
+    playerBody.position.y = (canvas.height / SCALE) - (50 / SCALE);
     playerBody.fixedRotation = true;
+    playerBody.userData = {type: 'player'};
 
-    playerFix.shape = new b2PolygonShape;
-    playerFix.shape.SetAsBox(10 / SCALE, 15 / SCALE)
-    playerFix.userData = 'player';
-    playerFix.density = 1.0;
-    playerFix.friction = 5;
-    playerFix.restitution = .5;
+    playerHead.shape = new b2PolygonShape;
+    playerHead.shape.SetAsArray([
+        {x:0 / SCALE, y:0 / SCALE}, 
+        {x:14 / SCALE, y:0 / SCALE},
+        {x:14 / SCALE, y:10 / SCALE}, 
+        {x:0 / SCALE, y:10 / SCALE}
+    ], 4);
+    playerHead.userData = {id: i, type: 'player', part: 'head'}
+
+    playerTorso.shape = new b2PolygonShape;
+    playerTorso.shape.SetAsArray([
+        {x:-1 / SCALE, y:10 / SCALE}, 
+        {x:15 / SCALE, y:10 / SCALE},
+        {x:15 / SCALE, y:20 / SCALE}, 
+        {x:-1 / SCALE, y:20 / SCALE}
+    ], 4);
+    playerTorso.userData = {id: i, type: 'player', part: 'body'}
+
+    playerLegs.shape = new b2PolygonShape;
+    playerLegs.shape.SetAsArray([
+        {x:-1 / SCALE, y:20 / SCALE}, 
+        {x:15 / SCALE, y:20 / SCALE},
+        {x:15 / SCALE, y:35 / SCALE}, 
+        {x:-1 / SCALE, y:35 / SCALE}
+    ], 4);
+    playerLegs.userData = {id: i, type: 'player', part: 'legs'}
 
     player.box2d = world.CreateBody(playerBody)
-    player.box2d.CreateFixture(playerFix);
+    player.box2d.CreateFixture(playerLegs);
+    player.box2d.CreateFixture(playerTorso);
+    player.box2d.CreateFixture(playerHead);
 }
 
 
@@ -184,6 +209,7 @@ function createEnemies(count) {
         var enemyBody = new b2BodyDef;
         var enemyBottom = new b2FixtureDef;
         var enemyHead = new b2FixtureDef;
+        var enemyLegs = new b2FixtureDef;
 
         enemyBody.type = b2Body.b2_dynamicBody;
         enemyBody.position.x = Math.random() * 25;
@@ -205,13 +231,23 @@ function createEnemies(count) {
             {x:15 / SCALE, y:20 / SCALE}, 
             {x:-1 / SCALE, y:20 / SCALE}
         ], 4);
-        enemyBottom.shape.m_centroid.Set(0,0);
         enemyBottom.userData = {id: i, type: 'enemy', part: 'body'}
         enemyBottom.restitution = .6;
 
+        enemyLegs.shape = new b2PolygonShape;
+        enemyLegs.shape.SetAsArray([
+            {x:-1 / SCALE, y:20 / SCALE}, 
+            {x:15 / SCALE, y:20 / SCALE},
+            {x:15 / SCALE, y:35 / SCALE}, 
+            {x:-1 / SCALE, y:35 / SCALE}
+        ], 4);
+        enemyLegs.userData = {id: i, type: 'enemy', part: 'legs'}
+
         enemy.box2d = world.CreateBody(enemyBody);
-        enemy.box2d.CreateFixture(enemyHead);
+        enemy.box2d.CreateFixture(enemyLegs);
         enemy.box2d.CreateFixture(enemyBottom);
+        enemy.box2d.CreateFixture(enemyHead);
+        
         
 
         enemy.flapSpeed = (Math.random() * 100) + 1500;
@@ -247,7 +283,7 @@ function renderPlayer() {
     ctx.save();
     ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
     ctx.rotate(player.box2d.GetAngle());
-    ctx.drawImage(player_sprite, -10, -15);
+    ctx.drawImage(player_sprite, -5, 0);
     ctx.restore();
 }
 
@@ -268,18 +304,19 @@ function detectCollisons() {
             }
 
             // PLAYER AND ENEMY HEAD --- KILLS ENEMY!
-            if(fixtureA === 'player' && fixtureB.part === 'head') {
+            if(fixtureA.type === 'player' && fixtureB.type === "enemy" && fixtureB.part === 'head') {
                 trash.push(contact.m_fixtureB.m_body);
                 killEnemy(contact.m_fixtureB);
-            } else if (fixtureB === 'player' && fixtureA.part === 'head') {
+            } else if (fixtureB.type === 'player' && fixtureA.type === "enemy" && fixtureA.part === 'head') {
                 trash.push(contact.m_fixtureA.m_body);
                 killEnemy(contact.m_fixtureA);
             }
 
-            // PLAYER AND ENEMY BODY --- PLAYER DIES!
-            if(fixtureA === 'player' && fixtureB.part === 'body') {
+            // PLAYER HEAD AND ENEMY BODY --- PLAYER DIES!
+            
+            if(fixtureA.type === 'player' && fixtureA.part === 'head' && fixtureB.type === 'enemy') {
                 killPlayer();
-            } else if (fixtureB === 'player' && fixtureA.part === 'body') {
+            } else if (fixtureB.type === 'player' && fixtureB.part === 'head' && fixtureA.type === 'enemy') {
                 killPlayer();
             }
 
@@ -416,11 +453,8 @@ function resetPlayer() {
 }
 
 function killEnemy(enemy) {
-    for(var i = 0; i < enemies.length; i++ ) {
-        
-        var userData = enemies[i].box2d.GetFixtureList().m_next.m_userData;
-                
-        if (userData === enemy.m_userData) {
+    for(var i = 0; i < enemies.length; i++ ) {                
+        if (enemies[i].id === enemy.m_userData.id) {
             enemies.splice(i, 1);
         }
     }
