@@ -18,7 +18,7 @@ var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
 
 var lives = 3;
-
+var level = 1;
 var enemies = [];
 
 var score = 0;
@@ -40,23 +40,17 @@ $(function() {
 
 function init() {
     world = new b2World(
-        new b2Vec2(0, 8),    //gravity
+        new b2Vec2(0, 4),    //gravity
         false                 //allow sleep
     );
 
     createCeiling();
     createPlatforms();
     createGround();
-    
     createPlayer();
-    createEnemies();
+    initEnemies(level)
     
     setUpDebug();
-
-    flapTheWings();
-
-    setInterval(changeFlapSpeed, 1000)
-
 };
 
 function update() {
@@ -82,7 +76,7 @@ function update() {
     //ctx.clearRect(0, 0, canvas.width, canvas.height);
     //ctx.fillStyle = "rgb(0, 0, 0)";
     //ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     requestAnimFrame(update);
 };
 
@@ -183,8 +177,8 @@ function Enemy(id) {
     this.id = id;
 }
 
-function createEnemies() {
-    for(var i = 0; i < 6; i++) {
+function createEnemies(count) {
+    for(var i = 0; i < count; i++) {
         
         var enemy = new Enemy(i);
         var enemyBody = new b2BodyDef;
@@ -194,7 +188,7 @@ function createEnemies() {
         enemyBody.type = b2Body.b2_dynamicBody;
         enemyBody.position.x = Math.random() * 25;
         enemyBody.position.y = Math.random() * 25;
-        
+
         enemyHead.shape = new b2PolygonShape;
         enemyHead.shape.SetAsArray([
             {x:0 / SCALE, y:0 / SCALE}, 
@@ -202,7 +196,6 @@ function createEnemies() {
             {x:14 / SCALE, y:10 / SCALE}, 
             {x:0 / SCALE, y:10 / SCALE}
         ], 4);
-        enemyHead.shape.m_centroid.Set(59,100);
         enemyHead.userData = {id: i, type: 'enemy', part: 'head'}
 
         enemyBottom.shape = new b2PolygonShape;
@@ -221,7 +214,7 @@ function createEnemies() {
         enemy.box2d.CreateFixture(enemyBottom);
         
 
-        enemy.flapSpeed = (Math.random() * 500) + 300;
+        enemy.flapSpeed = (Math.random() * 100) + 1500;
 
         enemies.push(enemy)
     }
@@ -238,7 +231,7 @@ function handleInteractions(){
     var vel = player.box2d.GetLinearVelocity();
     
     if (keys[38]) {  
-        vel.y = -6;   // up
+        vel.y = -4;   // up
     }
     if (keys[37]) {
         vel.x = -5;   // left
@@ -366,14 +359,7 @@ function flapTheWings() {
             if(enemies[x] !== undefined) {
                 makeEnemyFly(enemies[x]);
             }
-
         }, enemies[i].flapSpeed, i);
-    }
-}
-
-function changeFlapSpeed() {
-    for(var i = 0; i < enemies.length; i++) {
-        enemies[i].flapSpeed = (Math.random() * 1000) + 100;
     }
 }
 
@@ -399,7 +385,8 @@ function destroyObjects() {
 
 function checkStatus() {
     if (enemies.length === 0) {
-        showWinScreen();
+        enemies['a'] = 'b';
+        renderNextLevel();
     }
 }
 
@@ -411,16 +398,17 @@ function updateLives() {
     $('#lives span').html(lives);
 }
 
-function showWinScreen() {
-    resetGame()
+function updateLevel() {
+    $('#level span').html(level);
 }
 
-function resetGame() {
-    createEnemies();
+function renderNextLevel() {
+    level += 1;
+    initEnemies(level);
+    updateLevel();
 }
 
 function resetPlayer() {
-    console.log('go')
     setTimeout(function(){
         createPlayer();
         player_alive = true;
@@ -445,6 +433,11 @@ function killPlayer(enemy) {
     trash.push(player.box2d)
     player_alive = false;
     resetPlayer();
+}
+
+function initEnemies(level) {
+    createEnemies(level);
+    flapTheWings();
 }
 
 function setUpDebug() {
