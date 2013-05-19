@@ -2,16 +2,18 @@
 <link href="styles.css" rel="stylesheet" />
 
 <h1>Joust</h1>
-<canvas id="game" width="900" height="500"></canvas>
+<div id="game-wrapper">
+    <canvas id="game" width="900" height="500"></canvas>
+    <div id="score">Score <span></span></div>
+    <div id="lives">Lives <span>3</span></div>
+    <div id="level">Level <span>1</span></div>
+    <button id="start-game">Start</div>
+</div>
 
 <div id="high-scores">
     <h2>High Scores</h2>
     <span id="player-name"></span> <span id="high-score"></span>
 </div>
-<div id="score"></div>
-<div id="lives">Lives <span>3</span></div>
-<div id="level">Level <span>1</span></div>
-<button id="start-game">Start</div>
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="Box2dWeb-2.1.a.3.min.js"></script>

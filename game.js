@@ -60,7 +60,7 @@ function init() {
     
     setUpDebug();
 
-    if (localStorage['player_name'] === "null") {
+    if (localStorage['player_name'] === "null" || !localStorage['player_name']) {
         player_name = prompt('What\'s your name?');
         localStorage['player_name'] = player_name;
     } else {
@@ -448,7 +448,7 @@ function checkStatus() {
 }
 
 function updateScore() {
-    $('#score').html(score);
+    $('#score span').html(score);
 }
 
 function updateLives() {
@@ -497,23 +497,25 @@ function killPlayer(enemy) {
     
     // GAME OVER
     } else {
-        console.log('Sorry ' + player_name + " ,you lose... Your score is " + score + ".");
-        
-        if(score > localStorage['high_score'] || !localStorage['high_score']) {
-            console.log('New high score!!')
-            localStorage['high_score'] = score;
-        }
-        
-        endGame();
+        gameOver();
 
     }
 }
 
-function endGame() {
-    trash.push(player.box2d)
+function gameOver() {
     player_alive = false;
     lives = 0;
+    
+    updateLives();
+    trash.push(player.box2d)
+
     console.log('Game Over')
+
+    // New High Score        
+    if(score > localStorage['high_score'] || !localStorage['high_score']) {
+        console.log('New high score!!')
+        localStorage['high_score'] = score;
+    }
 }
 
 function initEnemies(level) {
