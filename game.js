@@ -181,26 +181,31 @@ function createEnemies() {
         
         var enemy = enemy = new Enemy();
         var enemyBody = new b2BodyDef;
-        var enemyFix = new b2FixtureDef;
-        var enemyFix2 = new b2FixtureDef;
+        var enemyBottom = new b2FixtureDef;
+        var enemyHead = new b2FixtureDef;
 
         enemyBody.type = b2Body.b2_dynamicBody;
         enemyBody.position.x = Math.random() * 25;
         enemyBody.position.y = Math.random() * 25
         
-        enemyFix.shape = new b2PolygonShape;
-        enemyFix.shape.SetAsBox(10 / SCALE, 10 / SCALE)
-        
-        enemyFix2.shape = new b2PolygonShape;
-        enemyFix2.shape.SetAsBox(2 / SCALE, 2 / SCALE, b2Vec2(-1 + 0.1, 1))
+        enemyBottom.shape = new b2PolygonShape;
+        enemyBottom.shape.SetAsArray([{x:0, y:.5},{x:.5, y:.5},{x:.5, y:1},{x:0, y:1}], 4);
+        enemyBottom.shape.m_centroid.Set(0,0);
+        enemyBottom.restitution = .5;
+        enemyBottom.userData = 'enemyBottom' + i;
 
-        enemyFix.restitution = .5;
-        enemyFix.userData = 'enemy' + i;
-        
+        enemyHead.shape = new b2PolygonShape;
+        enemyHead.shape.SetAsArray([{x:0, y:0},{x:.5, y:0},{x:.5, y:.5},{x:0, y:.5}], 4);
+
+        // enemyHead.shape.SetAsBox(5 / SCALE, 5 / SCALE, new b2Vec2(220,0));
+        enemyHead.shape.m_centroid.Set(59,100);
+        enemyHead.restitution = .5;
+        enemyHead.userData = 'enemyHead' + i;
+
         enemy.box2d = world.CreateBody(enemyBody);
-
-        enemy.box2d.CreateFixture(enemyFix);
-        enemy.box2d.CreateFixture(enemyFix2);
+        enemy.box2d.CreateFixture(enemyHead);
+        enemy.box2d.CreateFixture(enemyBottom);
+        
 
         enemy.flapSpeed = (Math.random() * 500) + 300;
 
@@ -243,64 +248,70 @@ function detectCollisons() {
     var listener = new b2ContactListener;
 
     listener.BeginContact = function(contact) {
-        // PLAYER AND GROUND / PLATFORM
-        if(contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData === 'ground' || 
-            contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData === 'platform') {
-            console.log('walking')
-        }
+        
+        var fixtureA = contact.m_fixtureA.m_userData;
+        var fixtureB = contact.m_fixtureB.m_userData;
 
-        // PLAYER AND ENEMY
-        if(contact.m_fixtureA.m_userData === 'player' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
-            trash.push(contact.m_fixtureB.m_body);
-            killEnemy(contact.m_fixtureB);
-        } else if (contact.m_fixtureB.m_userData === 'player' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
-            trash.push(contact.m_fixtureA.m_body);
-            killEnemy(contact.m_fixtureA);
-        }
+        if (fixtureA !== null && fixtureB !== null) {
 
-        //ENEMY AND PLATFORM
-        if(contact.m_fixtureA.m_userData === 'platform' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy' || 
-        contact.m_fixtureB.m_userData === 'platform' && contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy' ||
-        contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
+            // PLAYER AND GROUND / PLATFORM
+            if(fixtureA === 'player' && fixtureB === 'ground' || 
+                fixtureA === 'player' && fixtureB === 'platform') {
+                console.log('walking')
+            }
 
-            if (contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy') {
-                for(var i = 0; i < enemies.length; i++) {
-                    if (enemies[i].box2d.m_userData === contact.m_fixtureA.m_userData) {
-                        enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+            // PLAYER AND ENEMY
+            if(fixtureA === 'player' && fixtureB.slice(0, 5) === 'enemy') {
+                trash.push(contact.m_fixtureB.m_body);
+                killEnemy(contact.m_fixtureB);
+            } else if (fixtureB === 'player' && fixtureA.slice(0, 5) === 'enemy') {
+                trash.push(contact.m_fixtureA.m_body);
+                killEnemy(contact.m_fixtureA);
+            }
+
+            //ENEMY AND PLATFORM
+            if(fixtureA === 'platform' && fixtureB.slice(0, 5) === 'enemy' || 
+            fixtureB === 'platform' && fixtureA.slice(0, 5) === 'enemy') {
+
+                if (fixtureA.slice(0, 5) === 'enemy') {
+                    for(var i = 0; i < enemies.length; i++) {
+                        if (enemies[i].box2d.m_userData === fixtureA) {
+                            enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+                        }
                     }
-                }
 
-            } else {
-                for(var i = 0; i < enemies.length; i++) {
-                    if (enemies[i].box2d.m_userData === contact.m_fixtureB.m_userData) {
-                        enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+                } else {
+                    for(var i = 0; i < enemies.length; i++) {
+                        if (enemies[i].box2d.m_userData === fixtureB) {
+                            enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+                        }
                     }
                 }
             }
-        }
 
-        // ENEMY and ENEMY COLLISION
-        // make them go opposite directions
-        if(contact.m_fixtureA.m_userData.slice(0, 5) === 'enemy' && contact.m_fixtureB.m_userData.slice(0, 5) === 'enemy') {
-            for(var i = 0; i < enemies.length; i++) {
-                if (enemies[i].box2d.m_userData === contact.m_fixtureA.m_userData) {
-                    var enemyA = enemies[i];
+            // ENEMY and ENEMY COLLISION
+            // make them go opposite directions
+            if(fixtureA.slice(0, 5) === 'enemy' && fixtureB.slice(0, 5) === 'enemy') {
+                for(var i = 0; i < enemies.length; i++) {
+                    if (enemies[i].box2d.m_userData === fixtureA) {
+                        var enemyA = enemies[i];
 
-                }
-                if (enemies[i].box2d.m_userData === contact.m_fixtureB.m_userData) {
-                    var enemyB = enemies[i];
-                }
-
-                if (enemyA !== undefined && enemyB !== undefined) {
-                    if(enemyA.direction === 'left') { 
-                        enemyA.direction = 'left'; 
-                        enemyB.direction = 'right'
-                    } else {
-                        enemyA.direction = 'right'; 
-                        enemyB.direction = 'left';
                     }
+                    if (enemies[i].box2d.m_userData === fixtureB) {
+                        var enemyB = enemies[i];
+                    }
+
+                    if (enemyA !== undefined && enemyB !== undefined) {
+                        if(enemyA.direction === 'left') { 
+                            enemyA.direction = 'left'; 
+                            enemyB.direction = 'right'
+                        } else {
+                            enemyA.direction = 'right'; 
+                            enemyB.direction = 'left';
+                        }
+                    }
+                    
                 }
-                
             }
         }
     }
@@ -392,8 +403,10 @@ function resetGame() {
 }
 
 function killEnemy(enemy) {
-    // console.log(enemy.m_userData)
     for(var i = 0; i < enemies.length; i++ ) {
+        
+        console.log(enemies[i].box2d.GetFixtureList())
+        
         if (enemies[i].box2d.m_userData === enemy.m_userData) {
             enemies.splice(i, 1);
         }
