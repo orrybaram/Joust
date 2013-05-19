@@ -16,6 +16,7 @@ var player;
 var player_alive = true;
 var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
+var player_name = "";
 
 var lives = 3;
 var level = 1;
@@ -51,6 +52,9 @@ function init() {
     initEnemies(level)
     
     setUpDebug();
+
+    player_name = prompt('What\'s your name?');
+    localStorage['player_name'] = player_name;
 };
 
 function update() {
@@ -248,8 +252,6 @@ function createEnemies(count) {
         enemy.box2d.CreateFixture(enemyBottom);
         enemy.box2d.CreateFixture(enemyHead);
         
-        
-
         enemy.flapSpeed = (Math.random() * 100) + 1500;
 
         enemies.push(enemy)
@@ -462,11 +464,28 @@ function killEnemy(enemy) {
 }
 
 function killPlayer(enemy) {
-    lives -= 1;
     updateLives();
-    trash.push(player.box2d)
-    player_alive = false;
-    resetPlayer();
+    lives -= 1;
+
+    if(lives > 0) {
+        trash.push(player.box2d)
+        player_alive = false;
+        resetPlayer();
+    } else {
+        alert('Sorry ' + player_name + " ,you lose... Your score is " + score);
+        level = 1;
+        lives = 3;
+        score = 0;
+        enemies = [];
+        updateLevel();
+        updateLives();
+        updateScore();
+        for(var i = 0; i < enemies.length; i++) {
+            trash.push(enemies[i].box2d)
+        }
+        setTimeout(function(){initEnemies(level)}, 500);
+        
+    }
 }
 
 function initEnemies(level) {
