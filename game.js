@@ -188,19 +188,19 @@ function createEnemies() {
         enemyBody.position.x = Math.random() * 25;
         enemyBody.position.y = Math.random() * 25
         
-        enemyBottom.shape = new b2PolygonShape;
-        enemyBottom.shape.SetAsArray([{x:0, y:.5},{x:.5, y:.5},{x:.5, y:1},{x:0, y:1}], 4);
-        enemyBottom.shape.m_centroid.Set(0,0);
-        enemyBottom.restitution = .5;
-        enemyBottom.userData = 'enemyBottom' + i;
+        
 
         enemyHead.shape = new b2PolygonShape;
-        enemyHead.shape.SetAsArray([{x:0, y:0},{x:.5, y:0},{x:.5, y:.5},{x:0, y:.5}], 4);
-
-        // enemyHead.shape.SetAsBox(5 / SCALE, 5 / SCALE, new b2Vec2(220,0));
+        enemyHead.shape.SetAsArray([{x:0, y:0},{x:.5, y:0},{x:.5, y:.25},{x:0, y:.25}], 4);
         enemyHead.shape.m_centroid.Set(59,100);
         enemyHead.restitution = .5;
         enemyHead.userData = 'enemyHead' + i;
+
+        enemyBottom.shape = new b2PolygonShape;
+        enemyBottom.shape.SetAsArray([{x:0, y:.25},{x:.5, y:.25},{x:.5, y:1},{x:0, y:1}], 4);
+        enemyBottom.shape.m_centroid.Set(0,0);
+        enemyBottom.restitution = .5;
+        enemyBottom.userData = 'enemyBottom' + i;
 
         enemy.box2d = world.CreateBody(enemyBody);
         enemy.box2d.CreateFixture(enemyHead);
@@ -249,6 +249,8 @@ function detectCollisons() {
 
     listener.BeginContact = function(contact) {
         
+        console.log(contact)
+
         var fixtureA = contact.m_fixtureA.m_userData;
         var fixtureB = contact.m_fixtureB.m_userData;
 
@@ -261,10 +263,10 @@ function detectCollisons() {
             }
 
             // PLAYER AND ENEMY
-            if(fixtureA === 'player' && fixtureB.slice(0, 5) === 'enemy') {
+            if(fixtureA === 'player' && fixtureB.slice(0, 9) === 'enemyHead') {
                 trash.push(contact.m_fixtureB.m_body);
                 killEnemy(contact.m_fixtureB);
-            } else if (fixtureB === 'player' && fixtureA.slice(0, 5) === 'enemy') {
+            } else if (fixtureB === 'player' && fixtureA.slice(0, 9) === 'enemyHead') {
                 trash.push(contact.m_fixtureA.m_body);
                 killEnemy(contact.m_fixtureA);
             }
