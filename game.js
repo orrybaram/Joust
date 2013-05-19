@@ -21,6 +21,7 @@ var high_score = 0;
 var lives;
 var level;
 var enemies = [];
+var platforms = [];
 
 var score = 0;
 var SCALE = 30;
@@ -82,20 +83,19 @@ function update() {
     updateScore();
     checkStatus();
 
+    handleInteractions();
+    checkBoundries(player);
+    detectCollisons();
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(0, 0, 0, .9)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     if (player_alive) {
         renderPlayer();
     }
 
     renderEnemy();
-
-    handleInteractions();
-    checkBoundries(player);
-    detectCollisons();
-    
-    //ctx.clearRect(0, 0, canvas.width, canvas.height);
-    //ctx.fillStyle = "rgb(0, 0, 0)";
-    //ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     requestAnimFrame(update);
 };
 
@@ -135,6 +135,11 @@ function createCeiling() {
 
 // CREATE PLATFORMS
 // ======================================================
+function Platform(id) {
+    this.box2d = {};
+    this.id = id;
+}
+
 function createPlatforms() {
     var platformBody = new b2BodyDef;
     var platformFix = new b2FixtureDef;
@@ -142,6 +147,9 @@ function createPlatforms() {
     platformBody.type = b2Body.b2_staticBody;
     platformFix.friction = 1;
     for(var i = 0; i < 6; i++) {
+        
+        var platform = new Platform(i);
+
         if(i % 2 === 0) {
             platformBody.position.x = 100 / SCALE;
         } else {
@@ -153,7 +161,10 @@ function createPlatforms() {
         platformFix.shape.SetAsBox((150 / SCALE) / 2, (10/SCALE) / 2);
         platformFix.userData = 'platform';
 
-        world.CreateBody(platformBody).CreateFixture(platformFix);
+        platform.box2d = world.CreateBody(platformBody);
+        platform.box2d.CreateFixture(platformFix);
+
+        platforms.push(platform)
     }
 }
 
@@ -381,13 +392,13 @@ function renderEnemy() {
             ctx.scale(-1, 1);
             ctx.drawImage(
                 enemy.dude,         //image
-                -16, -2,              // source position
-                24, 14               // width/height
+                -16, -2,            // source position
+                24, 14              // width/height
             );
             ctx.drawImage(
                 enemy.bird,     //image
-                -22, -5,              // source position
-                30, 40               // width/height
+                -22, -5,        // source position
+                30, 40          // width/height
             );
         } else {
             ctx.drawImage(
@@ -403,6 +414,16 @@ function renderEnemy() {
             
         }
         ctx.restore();
+    }
+}
+
+function renderPlatforms() {
+    for(var i = 0; i < platform.length; i++) {
+        var platform = platforms[i];
+        
+        // ctx.fillStyle = "rgba(0, 0, 0, .9)";
+        // ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     }
 }
 
