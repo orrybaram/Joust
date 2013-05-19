@@ -303,25 +303,39 @@ function handleInteractions(){
 
 function renderPlayer() {
     var player_pos = player.box2d.GetPosition();
+    player.sprite.src = "images/white-ostridge/walk1.png";
     
-    if(player.direction === 'left') {
-        player.sprite.src = "images/player-standing-left.png";
-    } else {
-        player.sprite.src = "images/player-standing-right.png";
+     //console.log(player.is_flying)
+    
+    if (player.is_flying) {
+        player.sprite.src = "images/white-ostridge/fly1.png";
     }
-    
+
     ctx.save();
     ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
     ctx.rotate(player.box2d.GetAngle());
-    ctx.drawImage(player.sprite, -5, 0);
+    
+    if(player.direction === 'left') {
+        ctx.scale(-1, 1);
+        ctx.drawImage(
+        player.sprite,     //image
+            -17, 0,        // source position
+            22, 34         // width/height
+        );
+    } else {
+        ctx.drawImage(
+            player.sprite,   //image
+            -3, 0,           // source position
+            22, 34           // width/height
+        );
+    }
+    
     ctx.restore();
 }
 
 function renderEnemy() {
     for(var i = 0; i < enemies.length; i++) {
         enemy = enemies[i];
-
-        console.log(enemy.direction)
 
         var enemy_pos = enemy.box2d.GetPosition();
         
@@ -350,9 +364,12 @@ function detectCollisons() {
         if (fixtureA !== null && fixtureB !== null) {
 
             // PLAYER AND GROUND / PLATFORM
-            if(fixtureA === 'player' && fixtureB === 'ground' || 
-                fixtureA === 'player' && fixtureB === 'platform') {
+            if(fixtureA.type === 'player' && fixtureB === 'ground' || 
+                fixtureA.type === 'player' && fixtureB === 'platform' || 
+                fixtureB.type === 'player' && fixtureA === 'ground' || 
+                fixtureB.type === 'player' && fixtureA === 'platform') {
                 player.is_flying = false;
+                console.log('walking')
             }
 
             // PLAYER AND ENEMY HEAD --- KILLS ENEMY!
@@ -413,9 +430,19 @@ function detectCollisons() {
         }
     }
     listener.EndContact = function(contact) {
-        // PLAYER AND GROUND / PLATFORM
-        if(contact.m_fixtureA.m_userData === 'player') {
-            player.is_flying = true;
+        var fixtureA = contact.m_fixtureA.m_userData;
+        var fixtureB = contact.m_fixtureB.m_userData;
+        console.log(contact)
+        if (fixtureA !== null && fixtureB !== null) {
+
+            // PLAYER AND GROUND / PLATFORM
+            if(fixtureA.type === 'player' && fixtureB === 'ground' || 
+                fixtureA.type === 'player' && fixtureB === 'platform' || 
+                fixtureB.type === 'player' && fixtureA === 'ground' || 
+                fixtureB.type === 'player' && fixtureA === 'platform') {
+                player.is_flying = true;
+                console.log('walking')
+            }
         }
     }
 
