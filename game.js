@@ -140,7 +140,7 @@ function createPlatforms() {
     var platformFix = new b2FixtureDef;
     
     platformBody.type = b2Body.b2_staticBody;
-
+    platformFix.friction = 1;
     for(var i = 0; i < 6; i++) {
         if(i % 2 === 0) {
             platformBody.position.x = 100 / SCALE;
@@ -207,6 +207,7 @@ function createPlayer() {
         {x:15 / SCALE, y:35 / SCALE}, 
         {x:-1 / SCALE, y:35 / SCALE}
     ], 4);
+    playerLegs.friction = 1;
     playerLegs.userData = {id: i, type: 'player', part: 'legs'}
 
     player.box2d = world.CreateBody(playerBody)
@@ -224,8 +225,10 @@ function Enemy(id) {
     this.direction = "left";
     this.flapSpeed = 0;
     this.id = id;
-    this.sprite = new Image();
+    this.bird = new Image();
+    this.dude = new Image();
     this.is_flying = true;
+    this.flap_wings = false;
 }
 
 function createEnemies(count) {
@@ -357,17 +360,48 @@ function renderEnemy() {
         enemy = enemies[i];
 
         var enemy_pos = enemy.box2d.GetPosition();
+
+        enemy.bird.src = "images/enemy-bird/walk1.png";
+        enemy.dude.src = "images/dude/yellow.png";
+         //console.log(enemy.is_flying)
         
-        if(enemy.direction === 'left') {
-            enemy.sprite.src = "images/enemy-standing-left.png";
-        } else {
-            enemy.sprite.src = "images/enemy-standing-right.png";
+        if (enemy.is_flying) {
+            if (enemy.flap_wings) {
+                enemy.bird.src = "images/enemy-bird/fly2.png";
+            } else {
+                enemy.bird.src = "images/enemy-bird/fly1.png";
+            }
         }
-        
+
         ctx.save();
         ctx.translate(enemy_pos.x * SCALE, enemy_pos.y * SCALE);
         ctx.rotate(enemy.box2d.GetAngle());
-        ctx.drawImage(enemy.sprite, -5, 0);
+        
+        if(enemy.direction === 'left') {
+            ctx.scale(-1, 1);
+            ctx.drawImage(
+                enemy.dude,         //image
+                -16, -2,              // source position
+                24, 14               // width/height
+            );
+            ctx.drawImage(
+                enemy.bird,     //image
+                -22, -5,              // source position
+                30, 40               // width/height
+            );
+        } else {
+            ctx.drawImage(
+                enemy.dude,         //image
+                0, -2,              // source position
+                24, 14               // width/height
+            );
+            ctx.drawImage(
+                enemy.bird,   //image
+                -10, -5,           // source position
+                30, 40           // width/height
+            );
+            
+        }
         ctx.restore();
     }
 }
@@ -383,10 +417,10 @@ function detectCollisons() {
         if (fixtureA !== null && fixtureB !== null) {
 
             // PLAYER AND GROUND / PLATFORM
-            if(fixtureA.type === 'player' && fixtureB === 'ground' || 
-                fixtureA.type === 'player' && fixtureB === 'platform' || 
+            if(fixtureA.type === 'player'  && fixtureB === 'ground' || 
+                fixtureA.type === 'player' && fixtureA.part !== 'head' && fixtureB === 'platform' || 
                 fixtureB.type === 'player' && fixtureA === 'ground' || 
-                fixtureB.type === 'player' && fixtureA === 'platform') {
+                fixtureB.type === 'player' && fixtureA.part !== 'head' && fixtureA === 'platform') {
                 player.is_flying = false;
             }
 
@@ -408,23 +442,49 @@ function detectCollisons() {
             }
 
             //ENEMY AND PLATFORM
-            if(fixtureA === 'platform' && fixtureB.type === 'enemy' || 
-            fixtureB === 'platform' && fixtureA.type === 'enemy') {
+            if(fixtureA === 'platform' && fixtureB.type === 'enemy' && fixtureB.part !== 'head' || 
+            fixtureB === 'platform' && fixtureA.type === 'enemy' && fixtureA.part !== 'head') {
 
                 if (fixtureA.type === 'enemy') {
                     for(var i = 0; i < enemies.length; i++) {
                         if (enemies[i].id === fixtureA.id) {
                             enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+                            enemies[i].is_flying = false;
                         }
                     }
                 } else {
                     for(var i = 0; i < enemies.length; i++) {
                         if (enemies[i].id === fixtureB.id) {
                             enemies[i].direction === 'left' ? enemies[i].direction = 'right' : enemies[i].direction = 'left';
+                            enemies[i].is_flying = false;
                         }
                     }
                 }
             }
+
+            // ENEMY AND GROUND / PLATFORM
+            if(fixtureA.type === 'enemy'  && fixtureB === 'ground' || 
+                fixtureA.type === 'enemy' && fixtureA.part !== 'head' && fixtureB === 'platform' || 
+                fixtureB.type === 'enemy' && fixtureA === 'ground' || 
+                fixtureB.type === 'enemy' && fixtureA.part !== 'head' && fixtureA === 'platform') {
+                
+                if (fixtureA.type === 'enemy') {
+                    for(var i = 0; i < enemies.length; i++) {
+                        if (enemies[i].id === fixtureA.id) {
+                            enemies[i].is_flying = false;
+                        }
+                    }
+                } else {
+                    if (fixtureB.type === 'enemy') {
+                        for(var i = 0; i < enemies.length; i++) {
+                            if (enemies[i].id === fixtureB.id) {
+                                enemies[i].is_flying = false;
+                            }
+                        }
+                    }
+                }
+            } 
+            
 
             // ENEMY and ENEMY COLLISION
             if(fixtureA.type === 'enemy' && fixtureB.type === 'enemy') {
@@ -460,6 +520,28 @@ function detectCollisons() {
                 fixtureB.type === 'player' && fixtureA === 'platform') {
                 player.is_flying = true;
             }
+
+            if(fixtureA.type === 'enemy'  && fixtureB === 'ground' || 
+                fixtureA.type === 'enemy' && fixtureB === 'platform' || 
+                fixtureB.type === 'enemy' && fixtureA === 'ground' || 
+                fixtureB.type === 'enemy' && fixtureA === 'platform') {
+                
+                if (fixtureA.type === 'enemy') {
+                    for(var i = 0; i < enemies.length; i++) {
+                        if (enemies[i].id === fixtureA.id) {
+                            enemies[i].is_flying = true;
+                        }
+                    }
+                } else {
+                    if (fixtureB.type === 'enemy') {
+                        for(var i = 0; i < enemies.length; i++) {
+                            if (enemies[i].id === fixtureB.id) {
+                                enemies[i].is_flying = true;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -483,6 +565,8 @@ function makeEnemyFly(enemy) {
         } else {
             vel.x = (Math.random() * 2) + 2;
         }
+        enemy.flap_wings = true;
+        setTimeout(function(){enemy.flap_wings = false}, 1000)
         checkBoundries(enemy)
 }
 
@@ -490,7 +574,7 @@ function flapTheWings() {
     for(var i = 0; i < enemies.length; i++) {
         setInterval(function(x) {
             if(enemies[x] !== undefined) {
-                makeEnemyFly(enemies[x]);
+               makeEnemyFly(enemies[x]);
             }
         }, enemies[i].flapSpeed, i);
     }
@@ -610,7 +694,6 @@ function setUpDebug() {
     debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
     world.SetDebugDraw(debugDraw);
 }
-
 
 
 
