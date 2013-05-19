@@ -145,6 +145,8 @@ function Player() {
 }
 
 function createPlayer() {
+    player = new Player();
+
     var playerBody = new b2BodyDef;
     var playerFix = new b2FixtureDef;
 
@@ -160,9 +162,8 @@ function createPlayer() {
     playerFix.friction = 5;
     playerFix.restitution = .5;
 
-    player = new Player();
-
-    player.box2d = world.CreateBody(playerBody).CreateFixture(playerFix);
+    player.box2d = world.CreateBody(playerBody)
+    player.box2d.CreateFixture(playerFix);
 }
 
 
@@ -182,8 +183,6 @@ function createEnemies() {
         var enemyBody = new b2BodyDef;
         var enemyFix = new b2FixtureDef;
         var enemyFix2 = new b2FixtureDef;
-
-
 
         enemyBody.type = b2Body.b2_dynamicBody;
         enemyBody.position.x = Math.random() * 25;
@@ -217,7 +216,7 @@ function handleKeyUp(evt){
 }
 
 function handleInteractions(){
-    var vel = player.box2d.m_body.GetLinearVelocity();
+    var vel = player.box2d.GetLinearVelocity();
     
     if (keys[38]) {  
         vel.y = -6;   // up
@@ -231,11 +230,11 @@ function handleInteractions(){
 }
 
 function renderPlayer() {
-    var player_pos = player.box2d.m_body.GetPosition();
+    var player_pos = player.box2d.GetPosition();
     
     ctx.save();
     ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
-    ctx.rotate(player.box2d.m_body.GetAngle());
+    ctx.rotate(player.box2d.GetAngle());
     ctx.drawImage(player_sprite, -10, -15);
     ctx.restore();
 }
@@ -325,7 +324,7 @@ function detectCollisons() {
 }
 
 function makeEnemyFly(enemy) {
-        var vel = enemy.box2d.m_body.GetLinearVelocity();
+        var vel = enemy.box2d.GetLinearVelocity();
         vel.y = (Math.random() * -1) - 1.5;
         if(enemy.direction === 'right') {
             vel.x = (Math.random() * -2) -2;
@@ -353,16 +352,16 @@ function changeFlapSpeed() {
 }
 
 function checkBoundries(obj) {    
-    if (obj.box2d.m_body.GetPosition().y > canvas.height / SCALE){
-        obj.box2d.m_body.SetPosition(new b2Vec2(20,0),0)
+    if (obj.box2d.GetPosition().y > canvas.height / SCALE){
+        obj.box2d.SetPosition(new b2Vec2(20,0),0)
         //KILL PLAYER
     }
 
-    else if (obj.box2d.m_body.GetPosition().x > canvas.width / SCALE) {
-        obj.box2d.m_body.SetPosition(new b2Vec2(0, obj.box2d.m_body.GetPosition().y)); 
+    else if (obj.box2d.GetPosition().x > canvas.width / SCALE) {
+        obj.box2d.SetPosition(new b2Vec2(0, obj.box2d.GetPosition().y)); 
     }
-    else if (obj.box2d.m_body.GetPosition().x < 0) {
-        obj.box2d.m_body.SetPosition(new b2Vec2(canvas.width / SCALE, obj.box2d.m_body.GetPosition().y)); 
+    else if (obj.box2d.GetPosition().x < 0) {
+        obj.box2d.SetPosition(new b2Vec2(canvas.width / SCALE, obj.box2d.GetPosition().y)); 
     }
 }
 
