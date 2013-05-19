@@ -197,7 +197,7 @@ function createEnemies() {
         enemyHead.userData = 'enemyHead' + i;
 
         enemyBottom.shape = new b2PolygonShape;
-        enemyBottom.shape.SetAsArray([{x:0, y:.25},{x:.5, y:.25},{x:.5, y:1},{x:0, y:1}], 4);
+        enemyBottom.shape.SetAsArray([{x:0, y:.25},{x:.5, y:.205},{x:.5, y:1},{x:0, y:1}], 4);
         enemyBottom.shape.m_centroid.Set(0,0);
         enemyBottom.restitution = .5;
         enemyBottom.userData = 'enemyBottom' + i;
@@ -248,9 +248,7 @@ function detectCollisons() {
     var listener = new b2ContactListener;
 
     listener.BeginContact = function(contact) {
-        
-        console.log(contact)
-
+    
         var fixtureA = contact.m_fixtureA.m_userData;
         var fixtureB = contact.m_fixtureB.m_userData;
 
@@ -407,9 +405,9 @@ function resetGame() {
 function killEnemy(enemy) {
     for(var i = 0; i < enemies.length; i++ ) {
         
-        console.log(enemies[i].box2d.GetFixtureList())
-        
-        if (enemies[i].box2d.m_userData === enemy.m_userData) {
+        var userData = enemies[i].box2d.GetFixtureList().m_next.m_userData;
+                
+        if (userData === enemy.m_userData) {
             enemies.splice(i, 1);
         }
     }
