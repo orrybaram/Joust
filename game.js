@@ -13,8 +13,12 @@ var ctx = canvas.getContext("2d");
 var world;
 
 var player;
+var player_alive = true;
 var player_sprite = new Image();
     player_sprite.src = "images/player1.png";
+
+var lives = 3;
+
 var enemies = [];
 
 var score = 0;
@@ -68,7 +72,9 @@ function update() {
     updateScore();
     checkStatus();
 
-    renderPlayer();
+    if (player_alive) {
+        renderPlayer();
+    }
     handleInteractions();
     checkBoundries(player);
     detectCollisons();
@@ -258,13 +264,20 @@ function detectCollisons() {
                 console.log('walking')
             }
 
-            // PLAYER AND ENEMY
+            // PLAYER AND ENEMY HEAD --- KILLS ENEMY!
             if(fixtureA === 'player' && fixtureB.part === 'head') {
                 trash.push(contact.m_fixtureB.m_body);
                 killEnemy(contact.m_fixtureB);
             } else if (fixtureB === 'player' && fixtureA.part === 'head') {
                 trash.push(contact.m_fixtureA.m_body);
                 killEnemy(contact.m_fixtureA);
+            }
+
+            // PLAYER AND ENEMY BODY --- PLAYER DIES!
+            if(fixtureA === 'player' && fixtureB.part === 'body') {
+                killPlayer();
+            } else if (fixtureB === 'player' && fixtureA.part === 'body') {
+                killPlayer();
             }
 
             //ENEMY AND PLATFORM
@@ -287,22 +300,14 @@ function detectCollisons() {
             }
 
             // ENEMY and ENEMY COLLISION
-            
-            // check to see that both fixtures are are enemies
             if(fixtureA.type === 'enemy' && fixtureB.type === 'enemy') {
                 for(var i = 0; i < enemies.length; i++) {
-                    
-
-
                     if (enemies[i].id === fixtureA.id) {
                         var enemyA = enemies[i];
                     }
                     if (enemies[i].id === fixtureB.id) {
                         var enemyB = enemies[i];
                     }
-
-                    
-
                     if (enemyA !== undefined && enemyB !== undefined) {
                         
                         if(enemyA.direction === 'left') { 
@@ -311,7 +316,6 @@ function detectCollisons() {
                             enemyA.direction = 'left'; 
                         }
                     }
-                    
                 }
             }
         }
@@ -393,12 +397,24 @@ function updateScore() {
     $('#score').html(score);
 }
 
+function updateLives() {
+    $('#lives span').html(lives);
+}
+
 function showWinScreen() {
     resetGame()
 }
 
 function resetGame() {
     createEnemies();
+}
+
+function resetPlayer() {
+    console.log('go')
+    setTimeout(function(){
+        createPlayer();
+        player_alive = true;
+    }, 3000)
 }
 
 function killEnemy(enemy) {
@@ -411,6 +427,14 @@ function killEnemy(enemy) {
         }
     }
     score +=1;
+}
+
+function killPlayer(enemy) {
+    lives -= 1;
+    updateLives();
+    trash.push(player.box2d)
+    player_alive = false;
+    resetPlayer();
 }
 
 function setUpDebug() {
