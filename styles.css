@@ -15,6 +15,7 @@ canvas {
 	position: absolute;
 	left: 5px;
 	top: 5px;
+	/* margin: 10px; */
 }
 
 #game-wrapper {
@@ -25,12 +26,12 @@ canvas {
 
 #lives {
     position: absolute;
-    left: 140px; 
+    left: 170px; 
     top: 5px;
 }
 #level {
     position: absolute;
-    left: 70px; 
+    left: 90px; 
     top: 5px;
 }
 #start-game {

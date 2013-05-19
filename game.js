@@ -14,9 +14,7 @@ var world;
 
 var player;
 var player_alive;
-var player_sprite = new Image();
-    player_sprite.src = "images/player1.png";
-
+    
 var player_name = "";
 var high_score = 0;
 
@@ -87,6 +85,9 @@ function update() {
     if (player_alive) {
         renderPlayer();
     }
+
+    renderEnemy();
+
     handleInteractions();
     checkBoundries(player);
     detectCollisons();
@@ -97,10 +98,6 @@ function update() {
 
     requestAnimFrame(update);
 };
-
-function reset() {
-    world = null;
-}
 
 // CREATE GROUND
 // ======================================================
@@ -164,6 +161,9 @@ function createPlatforms() {
 // ======================================================
 function Player() {
     this.box2d = {};
+    this.direction = 'up';
+    this.sprite = new Image();
+    this.is_flying = false;
 }
 
 function createPlayer() {
@@ -219,9 +219,11 @@ function createPlayer() {
 
 function Enemy(id) {
     this.box2d = {},
-    this.direction = 'right';
+    this.direction = "left";
     this.flapSpeed = 0;
     this.id = id;
+    this.sprite = new Image();
+    this.is_flying = true;
 }
 
 function createEnemies(count) {
@@ -291,20 +293,50 @@ function handleInteractions(){
     }
     if (keys[37]) {
         vel.x = -5;   // left
+        player.direction = 'left';
     }
     else if (keys[39]) {
         vel.x = 5;    // right
+        player.direction = 'right'
     }
 }
 
 function renderPlayer() {
     var player_pos = player.box2d.GetPosition();
     
+    if(player.direction === 'left') {
+        player.sprite.src = "images/player-standing-left.png";
+    } else {
+        player.sprite.src = "images/player-standing-right.png";
+    }
+    
     ctx.save();
     ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
     ctx.rotate(player.box2d.GetAngle());
-    ctx.drawImage(player_sprite, -5, 0);
+    ctx.drawImage(player.sprite, -5, 0);
     ctx.restore();
+}
+
+function renderEnemy() {
+    for(var i = 0; i < enemies.length; i++) {
+        enemy = enemies[i];
+
+        console.log(enemy.direction)
+
+        var enemy_pos = enemy.box2d.GetPosition();
+        
+        if(enemy.direction === 'left') {
+            enemy.sprite.src = "images/enemy-standing-left.png";
+        } else {
+            enemy.sprite.src = "images/enemy-standing-right.png";
+        }
+        
+        ctx.save();
+        ctx.translate(enemy_pos.x * SCALE, enemy_pos.y * SCALE);
+        ctx.rotate(enemy.box2d.GetAngle());
+        ctx.drawImage(enemy.sprite, -5, 0);
+        ctx.restore();
+    }
 }
 
 function detectCollisons() {
@@ -320,7 +352,7 @@ function detectCollisons() {
             // PLAYER AND GROUND / PLATFORM
             if(fixtureA === 'player' && fixtureB === 'ground' || 
                 fixtureA === 'player' && fixtureB === 'platform') {
-                console.log('walking')
+                player.is_flying = false;
             }
 
             // PLAYER AND ENEMY HEAD --- KILLS ENEMY!
@@ -383,7 +415,7 @@ function detectCollisons() {
     listener.EndContact = function(contact) {
         // PLAYER AND GROUND / PLATFORM
         if(contact.m_fixtureA.m_userData === 'player') {
-            console.log('flying')
+            player.is_flying = true;
         }
     }
 
@@ -402,7 +434,7 @@ function detectCollisons() {
 function makeEnemyFly(enemy) {
         var vel = enemy.box2d.GetLinearVelocity();
         vel.y = (Math.random() * -1) - 1.5;
-        if(enemy.direction === 'right') {
+        if(enemy.direction === 'left') {
             vel.x = (Math.random() * -2) -2;
         } else {
             vel.x = (Math.random() * 2) + 2;
@@ -515,6 +547,8 @@ function gameOver() {
     if(score > localStorage['high_score'] || !localStorage['high_score']) {
         console.log('New high score!!')
         localStorage['high_score'] = score;
+        high_score = score;
+        updatePlayerInfo();
     }
 }
 
