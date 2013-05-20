@@ -107,7 +107,7 @@ function createGround() {
 
     groundBody.type = b2Body.b2_staticBody;
     groundBody.position.x = canvas.width / 2 / SCALE;
-    groundBody.position.y = canvas.height / SCALE;
+    groundBody.position.y = canvas.height / SCALE - 80 / SCALE;
 
     groundFix.shape = new b2PolygonShape;
     groundFix.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
@@ -144,14 +144,12 @@ function createPlatforms() {
     var platformBody = new b2BodyDef;
     var platformFix = new b2FixtureDef;
     var platform_init = [
-        {x:30, y:150},
-        {x:70, y:300},
-        {x:400, y:175},
-        {x:400, y:350},
-        {x:870, y:150},
-        {x:830, y:300},
-        
-        
+        {x:30, y:150, width: 150},
+        {x:70, y:300, width: 150},
+        {x:370, y:175, width: 250},
+        {x:400, y:350, width: 150},
+        {x:870, y:150, width: 150},
+        {x:830, y:300, width: 150},
     ];
 
     platformBody.type = b2Body.b2_staticBody;
@@ -164,7 +162,7 @@ function createPlatforms() {
         platformBody.position.y = platform_init[i].y / SCALE;
 
         platformFix.shape = new b2PolygonShape;
-        platformFix.shape.SetAsBox((150 / SCALE) / 2, (10/SCALE) / 2);
+        platformFix.shape.SetAsBox((platform_init[i].width / SCALE) / 2, (20/SCALE) / 2);
         platformFix.userData = 'platform';
 
         platform.box2d = world.CreateBody(platformBody);
