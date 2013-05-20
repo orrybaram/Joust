@@ -51,9 +51,7 @@ function init() {
     player_alive = true;
     high_score = localStorage['high_score'];
 
-    createCeiling();
     createPlatforms();
-    createGround();
     createPlayer();
     initEnemies(level)
     
@@ -99,72 +97,42 @@ function update() {
     requestAnimFrame(update);
 };
 
-// CREATE GROUND
-// ======================================================
-function createGround() { 
-    var groundBody = new b2BodyDef;
-    var groundFix = new b2FixtureDef;
-
-    groundBody.type = b2Body.b2_staticBody;
-    groundBody.position.x = canvas.width / 2 / SCALE;
-    groundBody.position.y = canvas.height / SCALE - 80 / SCALE;
-
-    groundFix.shape = new b2PolygonShape;
-    groundFix.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
-    groundFix.userData = 'ground';
-
-    world.CreateBody(groundBody).CreateFixture(groundFix);
-}
-
-// CREATE FLIGHT CEILING
-// ======================================================
-function createCeiling() { 
-    var ceilingBody = new b2BodyDef;
-    var ceilingFix = new b2FixtureDef;
-
-    ceilingBody.type = b2Body.b2_staticBody;
-    ceilingBody.position.x = canvas.width / 2 / SCALE;
-    ceilingBody.position.y = 0 - 20 / SCALE;
-
-    ceilingFix.shape = new b2PolygonShape;
-    ceilingFix.shape.SetAsBox((canvas.width / SCALE) / 2, (10/SCALE) / 2);
-    ceilingFix.userData = 'ceiling';
-
-    world.CreateBody(ceilingBody).CreateFixture(ceilingFix);
-}
-
 // CREATE PLATFORMS
 // ======================================================
-function Platform(id, position) {
+function Platform(id) {
     this.box2d = {};
     this.id = id;
 }
 
 function createPlatforms() {
-    var platformBody = new b2BodyDef;
-    var platformFix = new b2FixtureDef;
     var platform_init = [
-        {x:30, y:150, width: 150},
-        {x:70, y:300, width: 150},
-        {x:370, y:175, width: 250},
-        {x:400, y:350, width: 150},
-        {x:870, y:150, width: 150},
-        {x:830, y:300, width: 150},
+        {x:30, y:150, width: 150, type: 'platform'},
+        {x:70, y:300, width: 150, type: 'platform'},
+        {x:370, y:175, width: 250, type: 'platform'},
+        {x:400, y:350, width: 150, type: 'platform'},
+        {x:870, y:150, width: 150, type: 'platform'},
+        {x:830, y:300, width: 150, type: 'platform'},
+        {x:450, y:550, width: 700, type: 'platform'}, //ground
+        {x:450, y:-40, width: canvas.width + 20, type: 'platform'} //flight ceiling
     ];
 
+    var platformBody = new b2BodyDef;
+    var platformFix = new b2FixtureDef;
+    
     platformBody.type = b2Body.b2_staticBody;
     platformFix.friction = 1;
+    
     for(var i = 0; i < platform_init.length; i++) {
         
         var platform = new Platform(i);
 
         platformBody.position.x = platform_init[i].x / SCALE;
         platformBody.position.y = platform_init[i].y / SCALE;
+        platformBody.userData = {'class': 'platform', 'type': platform_init[i].type};
 
         platformFix.shape = new b2PolygonShape;
         platformFix.shape.SetAsBox((platform_init[i].width / SCALE) / 2, (20/SCALE) / 2);
-        platformFix.userData = 'platform';
-
+        
         platform.box2d = world.CreateBody(platformBody);
         platform.box2d.CreateFixture(platformFix);
 
@@ -193,7 +161,7 @@ function createPlayer() {
 
     playerBody.type = b2Body.b2_dynamicBody;
     playerBody.position.x = canvas.width / 2 / SCALE;
-    playerBody.position.y = (canvas.height / SCALE) - (50 / SCALE);
+    playerBody.position.y = (canvas.height / SCALE) - (120 / SCALE);
     playerBody.fixedRotation = true;
     playerBody.userData = {type: 'player'};
 
@@ -256,8 +224,14 @@ function createEnemies(count) {
         var enemyLegs = new b2FixtureDef;
 
         enemyBody.type = b2Body.b2_dynamicBody;
-        enemyBody.position.x = Math.random() * 25;
-        enemyBody.position.y = Math.random() * 25;
+        
+        if(i % 2 === 0) {
+            enemyBody.position.x = 0;
+        } else {
+            enemyBody.position.x = canvas.width;
+        }
+        
+        enemyBody.position.y = (Math.random() * 600 / SCALE) - 80 / SCALE;
 
         enemyHead.shape = new b2PolygonShape;
         enemyHead.shape.SetAsArray([
@@ -452,10 +426,8 @@ function detectCollisons() {
         if (fixtureA !== null && fixtureB !== null) {
 
             // PLAYER AND GROUND / PLATFORM
-            if(fixtureA.type === 'player'  && fixtureB === 'ground' || 
-                fixtureA.type === 'player' && fixtureA.part !== 'head' && fixtureB === 'platform' || 
-                fixtureB.type === 'player' && fixtureA === 'ground' || 
-                fixtureB.type === 'player' && fixtureA.part !== 'head' && fixtureA === 'platform') {
+            if(fixtureA.type === 'player' && fixtureA.part !== 'head' && fixtureB.type === 'platform' || 
+                fixtureB.type === 'player' && fixtureA.part !== 'head' && fixtureA.type === 'platform') {
                 player.is_flying = false;
             }
 
@@ -469,7 +441,6 @@ function detectCollisons() {
             }
 
             // PLAYER HEAD AND ENEMY BODY --- PLAYER DIES!
-            
             if(fixtureA.type === 'player' && fixtureA.part === 'head' && fixtureB.type === 'enemy') {
                 killPlayer();
             } else if (fixtureB.type === 'player' && fixtureB.part === 'head' && fixtureA.type === 'enemy') {
@@ -477,8 +448,8 @@ function detectCollisons() {
             }
 
             //ENEMY AND PLATFORM
-            if(fixtureA === 'platform' && fixtureB.type === 'enemy' && fixtureB.part !== 'head' || 
-            fixtureB === 'platform' && fixtureA.type === 'enemy' && fixtureA.part !== 'head') {
+            if(fixtureA.type === 'platform' && fixtureB.type === 'enemy' && fixtureB.part !== 'head' || 
+            fixtureB.type === 'platform' && fixtureA.type === 'enemy' && fixtureA.part !== 'head') {
 
                 if (fixtureA.type === 'enemy') {
                     for(var i = 0; i < enemies.length; i++) {
@@ -498,10 +469,8 @@ function detectCollisons() {
             }
 
             // ENEMY AND GROUND / PLATFORM
-            if(fixtureA.type === 'enemy'  && fixtureB === 'ground' || 
-                fixtureA.type === 'enemy' && fixtureA.part !== 'head' && fixtureB === 'platform' || 
-                fixtureB.type === 'enemy' && fixtureA === 'ground' || 
-                fixtureB.type === 'enemy' && fixtureA.part !== 'head' && fixtureA === 'platform') {
+            if(fixtureA.type === 'enemy' && fixtureA.part !== 'head' && fixtureB.type === 'platform' || 
+               fixtureB.type === 'enemy' && fixtureA.part !== 'head' && fixtureA.type === 'platform') {
                 
                 if (fixtureA.type === 'enemy') {
                     for(var i = 0; i < enemies.length; i++) {
@@ -549,17 +518,13 @@ function detectCollisons() {
         if (fixtureA !== null && fixtureB !== null) {
 
             // PLAYER AND GROUND / PLATFORM
-            if(fixtureA.type === 'player' && fixtureB === 'ground' || 
-                fixtureA.type === 'player' && fixtureB === 'platform' || 
-                fixtureB.type === 'player' && fixtureA === 'ground' || 
-                fixtureB.type === 'player' && fixtureA === 'platform') {
+            if( fixtureA.type === 'player' && fixtureB.type === 'platform' || 
+                fixtureB.type === 'player' && fixtureA.type === 'platform') {
                 player.is_flying = true;
             }
 
-            if(fixtureA.type === 'enemy'  && fixtureB === 'ground' || 
-                fixtureA.type === 'enemy' && fixtureB === 'platform' || 
-                fixtureB.type === 'enemy' && fixtureA === 'ground' || 
-                fixtureB.type === 'enemy' && fixtureA === 'platform') {
+            if( fixtureA.type === 'enemy' && fixtureB.type === 'platform' || 
+                fixtureB.type === 'enemy' && fixtureA.type === 'platform') {
                 
                 if (fixtureA.type === 'enemy') {
                     for(var i = 0; i < enemies.length; i++) {
