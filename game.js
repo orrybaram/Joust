@@ -588,12 +588,11 @@ function flapTheWings() {
 function checkBoundries(obj) {    
     // BOTTOM OF THE SCREEN
     if (obj.box2d.GetPosition().y > canvas.height / SCALE){
-        console.log(obj.box2d)
         // take character off screen and then kill him silently :(
         obj.box2d.SetPosition(new b2Vec2(-999, -999));
 
         if(obj.type === 'player') { killPlayer() }
-        if(obj.type === 'enemy') { killEnemy(obj) }
+        if(obj.type === 'enemy') { killEnemy(obj, true) }
     }
     // LEFT OF THE SCREEN
     else if (obj.box2d.GetPosition().x > canvas.width / SCALE) {
@@ -648,10 +647,16 @@ function initEnemies(level) {
     createEnemies(level);
     flapTheWings();
 }
-function killEnemy(enemy) {
+function killEnemy(enemy, is_fixture_data) {
     for(var i = 0; i < enemies.length; i++ ) {                
-        if (enemies[i].id === enemy.m_userData.id) {
-            enemies.splice(i, 1);
+        if (is_fixture_data) {
+            if (enemies[i].id === enemy.box2d.m_fixtureList.m_userData.id) {
+                enemies.splice(i, 1);
+            }  
+        } else {
+            if (enemies[i].id === enemy.m_userData.id) {
+                enemies.splice(i, 1);
+            }
         }
     }
     score +=1;
