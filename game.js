@@ -87,9 +87,9 @@ function update() {
     checkBoundries(player);
     detectCollisons();
     
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(0, 0, 0, .9)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ctx.fillStyle = "rgba(0, 0, 0, .9)";
+    // ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     if (player_alive) {
         renderPlayer();
@@ -135,7 +135,7 @@ function createCeiling() {
 
 // CREATE PLATFORMS
 // ======================================================
-function Platform(id) {
+function Platform(id, position) {
     this.box2d = {};
     this.id = id;
 }
@@ -143,19 +143,25 @@ function Platform(id) {
 function createPlatforms() {
     var platformBody = new b2BodyDef;
     var platformFix = new b2FixtureDef;
-    
+    var platform_init = [
+        {x:30, y:150},
+        {x:70, y:300},
+        {x:400, y:175},
+        {x:400, y:350},
+        {x:870, y:150},
+        {x:830, y:300},
+        
+        
+    ];
+
     platformBody.type = b2Body.b2_staticBody;
     platformFix.friction = 1;
-    for(var i = 0; i < 6; i++) {
+    for(var i = 0; i < platform_init.length; i++) {
         
         var platform = new Platform(i);
 
-        if(i % 2 === 0) {
-            platformBody.position.x = 100 / SCALE;
-        } else {
-            platformBody.position.x = (canvas.width / SCALE) - (100 / SCALE);
-        }
-        platformBody.position.y = (i * 50 / SCALE) + 100 / SCALE;
+        platformBody.position.x = platform_init[i].x / SCALE;
+        platformBody.position.y = platform_init[i].y / SCALE;
 
         platformFix.shape = new b2PolygonShape;
         platformFix.shape.SetAsBox((150 / SCALE) / 2, (10/SCALE) / 2);
@@ -294,30 +300,9 @@ function createEnemies(count) {
     }
 }
 
-function handleKeyDown(evt){
-    keys[evt.keyCode] = true;
-}
-function handleKeyUp(evt){
-    keys[evt.keyCode] = false;
-}
 
-function handleInteractions(){
-    var vel = player.box2d.GetLinearVelocity();
-    
-    if (keys[38]) {  
-        vel.y = -3.5;   // up
-        player.flap_wings = true;
-    }
-    if (keys[37]) {
-        vel.x = -3.5;   // left
-        player.direction = 'left';
-    }
-    else if (keys[39]) {
-        vel.x = 3.5;    // right
-        player.direction = 'right'
-    }
-}
-
+// RENDER PLAYER
+// ======================================================
 function renderPlayer() {
     var player_pos = player.box2d.GetPosition();
 
@@ -366,6 +351,8 @@ function renderPlayer() {
     player.flap_wings = false;
 }
 
+// RENDER ENEMY
+// ======================================================
 function renderEnemy() {
     for(var i = 0; i < enemies.length; i++) {
         enemy = enemies[i];
@@ -417,16 +404,45 @@ function renderEnemy() {
     }
 }
 
+// RENDER PLATFORMS
+// ======================================================
 function renderPlatforms() {
     for(var i = 0; i < platform.length; i++) {
         var platform = platforms[i];
-        
         // ctx.fillStyle = "rgba(0, 0, 0, .9)";
         // ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     }
 }
 
+// EVENT HANDLERS
+// ======================================================
+function handleKeyDown(evt){
+    keys[evt.keyCode] = true;
+}
+function handleKeyUp(evt){
+    keys[evt.keyCode] = false;
+}
+
+function handleInteractions(){
+    var vel = player.box2d.GetLinearVelocity();
+    
+    if (keys[38]) {  
+        vel.y = -3.5;   // up
+        player.flap_wings = true;
+    }
+    if (keys[37]) {
+        vel.x = -3.5;   // left
+        player.direction = 'left';
+    }
+    else if (keys[39]) {
+        vel.x = 3.5;    // right
+        player.direction = 'right'
+    }
+}
+
+
+// COLLISION DETECTION
+// ======================================================
 function detectCollisons() {
     var listener = new b2ContactListener;
 
@@ -578,6 +594,8 @@ function detectCollisons() {
 
 }
 
+// ANIMATION HANDLERS
+// ======================================================
 function makeEnemyFly(enemy) {
         var vel = enemy.box2d.GetLinearVelocity();
         vel.y = (Math.random() * -1) - 1.5;
@@ -601,6 +619,8 @@ function flapTheWings() {
     }
 }
 
+// STATUS CHECKS
+// ======================================================
 function checkBoundries(obj) {    
     if (obj.box2d.GetPosition().y > canvas.height / SCALE){
         obj.box2d.SetPosition(new b2Vec2(20,0),0)
@@ -615,17 +635,57 @@ function checkBoundries(obj) {
     }
 }
 
-function destroyObjects() {
-    for(var i = 0; i < trash.length; i++) {
-        world.DestroyBody(trash[i]);
-    }
-}
-
 function checkStatus() {
     if (enemies.length === 0) {
         enemies['a'] = 'b';
         renderNextLevel();
     }
+}
+
+// UTILITIES
+// ======================================================
+function destroyObjects() {
+    for(var i = 0; i < trash.length; i++) {
+        world.DestroyBody(trash[i]);
+    }
+}
+function renderNextLevel() {
+    level += 1;
+    initEnemies(level);
+    updateLevel();
+}
+function resetPlayer() {
+    setTimeout(function(){
+        createPlayer();
+        player_alive = true;
+    }, 3000)
+}
+function killPlayer(enemy) {
+    lives -= 1;
+    updateLives();
+    
+    if(lives > 0) {
+        trash.push(player.box2d)
+        player_alive = false;
+        resetPlayer();
+    
+    // GAME OVER
+    } else {
+        gameOver();
+
+    }
+}
+function initEnemies(level) {
+    createEnemies(level);
+    flapTheWings();
+}
+function killEnemy(enemy) {
+    for(var i = 0; i < enemies.length; i++ ) {                
+        if (enemies[i].id === enemy.m_userData.id) {
+            enemies.splice(i, 1);
+        }
+    }
+    score +=1;
 }
 
 function updateScore() {
@@ -645,44 +705,6 @@ function updatePlayerInfo() {
     $('#high-score').html(high_score);
 }
 
-function renderNextLevel() {
-    level += 1;
-    initEnemies(level);
-    updateLevel();
-}
-
-function resetPlayer() {
-    setTimeout(function(){
-        createPlayer();
-        player_alive = true;
-    }, 3000)
-}
-
-function killEnemy(enemy) {
-    for(var i = 0; i < enemies.length; i++ ) {                
-        if (enemies[i].id === enemy.m_userData.id) {
-            enemies.splice(i, 1);
-        }
-    }
-    score +=1;
-}
-
-function killPlayer(enemy) {
-    lives -= 1;
-    updateLives();
-    
-    if(lives > 0) {
-        trash.push(player.box2d)
-        player_alive = false;
-        resetPlayer();
-    
-    // GAME OVER
-    } else {
-        gameOver();
-
-    }
-}
-
 function gameOver() {
     player_alive = false;
     lives = 0;
@@ -699,11 +721,6 @@ function gameOver() {
         high_score = score;
         updatePlayerInfo();
     }
-}
-
-function initEnemies(level) {
-    createEnemies(level);
-    flapTheWings();
 }
 
 function setUpDebug() {
