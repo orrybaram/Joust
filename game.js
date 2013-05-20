@@ -150,6 +150,7 @@ function Player() {
     this.dude = new Image();
     this.is_flying = false;
     this.flap_wings = false;
+    this.type = 'player';
 }
 
 function createPlayer() {
@@ -213,6 +214,7 @@ function Enemy(id) {
     this.dude = new Image();
     this.is_flying = true;
     this.flap_wings = false;
+    this.type = 'enemy';
 }
 
 function createEnemies(count) {
@@ -469,7 +471,7 @@ function detectCollisons() {
                 }
             }
 
-            // ENEMY AND GROUND / PLATFORM
+            // ENEMY AND PLATFORM
             if(fixtureA.type === 'enemy' && fixtureA.part !== 'head' && fixtureB.type === 'platform' || 
                fixtureB.type === 'enemy' && fixtureA.part !== 'head' && fixtureA.type === 'platform') {
                 
@@ -490,7 +492,6 @@ function detectCollisons() {
                 }
             } 
             
-
             // ENEMY and ENEMY COLLISION
             if(fixtureA.type === 'enemy' && fixtureB.type === 'enemy') {
                 for(var i = 0; i < enemies.length; i++) {
@@ -585,14 +586,20 @@ function flapTheWings() {
 // STATUS CHECKS
 // ======================================================
 function checkBoundries(obj) {    
+    // BOTTOM OF THE SCREEN
     if (obj.box2d.GetPosition().y > canvas.height / SCALE){
-        obj.box2d.SetPosition(new b2Vec2(20,0),0)
-        //KILL PLAYER
-    }
+        console.log(obj.box2d)
+        // take character off screen and then kill him silently :(
+        obj.box2d.SetPosition(new b2Vec2(-999, -999));
 
+        if(obj.type === 'player') { killPlayer() }
+        if(obj.type === 'enemy') { killEnemy(obj) }
+    }
+    // LEFT OF THE SCREEN
     else if (obj.box2d.GetPosition().x > canvas.width / SCALE) {
         obj.box2d.SetPosition(new b2Vec2(0, obj.box2d.GetPosition().y)); 
     }
+    // RIGHT OF THE SCREEN
     else if (obj.box2d.GetPosition().x < 0) {
         obj.box2d.SetPosition(new b2Vec2(canvas.width / SCALE, obj.box2d.GetPosition().y)); 
     }
@@ -623,7 +630,7 @@ function resetPlayer() {
         player_alive = true;
     }, 3000)
 }
-function killPlayer(enemy) {
+function killPlayer() {
     lives -= 1;
     updateLives();
     
@@ -635,7 +642,6 @@ function killPlayer(enemy) {
     // GAME OVER
     } else {
         gameOver();
-
     }
 }
 function initEnemies(level) {
