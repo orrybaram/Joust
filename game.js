@@ -106,14 +106,15 @@ function Platform(id) {
 
 function createPlatforms() {
     var platform_init = [
+        {x:450, y:-40, width: canvas.width + 20, type: 'platform'}, //flight ceiling
         {x:30, y:150, width: 150, type: 'platform'},
         {x:70, y:300, width: 150, type: 'platform'},
         {x:370, y:175, width: 250, type: 'platform'},
         {x:400, y:350, width: 150, type: 'platform'},
         {x:870, y:150, width: 150, type: 'platform'},
         {x:830, y:300, width: 150, type: 'platform'},
-        {x:450, y:550, width: 700, type: 'platform'}, //ground
-        {x:450, y:-40, width: canvas.width + 20, type: 'platform'} //flight ceiling
+        {x:450, y:500, width: 700, type: 'platform'}, //ground
+        
     ];
 
     var platformBody = new b2BodyDef;
@@ -128,7 +129,7 @@ function createPlatforms() {
 
         platformBody.position.x = platform_init[i].x / SCALE;
         platformBody.position.y = platform_init[i].y / SCALE;
-        platformBody.userData = {'class': 'platform', 'type': platform_init[i].type};
+        platformFix.userData = {'type': 'platform', 'id': platform_init[i].type};
 
         platformFix.shape = new b2PolygonShape;
         platformFix.shape.SetAsBox((platform_init[i].width / SCALE) / 2, (20/SCALE) / 2);
@@ -161,7 +162,7 @@ function createPlayer() {
 
     playerBody.type = b2Body.b2_dynamicBody;
     playerBody.position.x = canvas.width / 2 / SCALE;
-    playerBody.position.y = (canvas.height / SCALE) - (120 / SCALE);
+    playerBody.position.y = (canvas.height / SCALE) - (150 / SCALE);
     playerBody.fixedRotation = true;
     playerBody.userData = {type: 'player'};
 
@@ -516,7 +517,6 @@ function detectCollisons() {
         var fixtureB = contact.m_fixtureB.m_userData;
         
         if (fixtureA !== null && fixtureB !== null) {
-
             // PLAYER AND GROUND / PLATFORM
             if( fixtureA.type === 'player' && fixtureB.type === 'platform' || 
                 fixtureB.type === 'player' && fixtureA.type === 'platform') {
