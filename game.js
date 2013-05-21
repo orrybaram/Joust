@@ -10,6 +10,7 @@
 var game_canvas = document.getElementById("game");
 var bkg_canvas = document.getElementById("bkg");
 var game_ctx = game_canvas.getContext("2d");
+var bkg_ctx = bkg_canvas.getContext("2d");
 
 var CANVAS_WIDTH = 900;
 var CANVAS_HEIGHT = 600; 
@@ -104,6 +105,10 @@ function update() {
         renderPlayer();
     }
 
+    //game_ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // game_ctx.fillStyle = "rgba(0, 0, 0, .9)";
+    // game_ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
     renderEnemy();
     requestAnimFrame(update);
 };
@@ -139,6 +144,9 @@ function createPlatforms() {
         platform.box2d.CreateFixture(platformFix);
 
         platforms.push(platform)
+
+        bkg_ctx.fillRect(platform_data.x - (platform_data.width / 2), platform_data.y - (platform_data.height / 2), platform_data.width, platform_data.height);
+        bkg_ctx.fillStyle = '#FFF';
     }
 }
 
@@ -702,9 +710,9 @@ function setUpDebug() {
     var debugDraw = new b2DebugDraw();
     debugDraw.SetSprite(document.getElementById("game").getContext("2d"));
     debugDraw.SetDrawScale(SCALE);
-    debugDraw.SetFillAlpha(.3);
-    debugDraw.SetLineThickness(1.0);
-    debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+    debugDraw.SetFillAlpha(0);
+    debugDraw.SetLineThickness(0);
+    //debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
     world.SetDebugDraw(debugDraw);
 }
 
