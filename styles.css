@@ -8,6 +8,16 @@ canvas {
     border: 1px solid rgb(204, 204, 204);
     margin: 20px auto 0px;
     display:block;
+    position: absolute;
+}
+
+#game {
+    z-index: 2;
+}
+
+#bkg {
+    z-index: 1;
+    background-color: black;
 }
 
 #score {

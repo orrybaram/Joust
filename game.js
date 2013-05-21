@@ -7,8 +7,12 @@
                       \/                 \/            
 ============================================================= */
 
-var canvas = document.getElementById("game");
-var ctx = canvas.getContext("2d");
+var game_canvas = document.getElementById("game");
+var bkg_canvas = document.getElementById("bkg");
+var game_ctx = game_canvas.getContext("2d");
+
+var CANVAS_WIDTH = 900;
+var CANVAS_HEIGHT = 600; 
 
 var world;
 
@@ -22,6 +26,17 @@ var lives;
 var level;
 var enemies = [];
 var platforms = [];
+var platform_init = [
+    {x:450, y:-40, width: CANVAS_WIDTH + 20, type: 'platform'}, //flight ceiling
+    {x:30, y:150, width: 150, height: 20, type: 'platform'},
+    {x:70, y:300, width: 150, height: 20, type: 'platform'},
+    {x:370, y:175, width: 250, height: 20, type: 'platform'},
+    {x:400, y:350, width: 150, height: 20, type: 'platform'},
+    {x:870, y:150, width: 150, height: 20, type: 'platform'},
+    {x:830, y:300, width: 150, height: 20, type: 'platform'},
+    {x:450, y:500, width: 700, height: 20, type: 'platform'}, //ground
+    
+];
 
 var score = 0;
 var SCALE = 30;
@@ -85,10 +100,6 @@ function update() {
     checkBoundries(player);
     detectCollisons();
     
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // ctx.fillStyle = "rgba(0, 0, 0, .9)";
-    // ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     if (player_alive) {
         renderPlayer();
     }
@@ -105,18 +116,7 @@ function Platform(id) {
 }
 
 function createPlatforms() {
-    var platform_init = [
-        {x:450, y:-40, width: canvas.width + 20, type: 'platform'}, //flight ceiling
-        {x:30, y:150, width: 150, type: 'platform'},
-        {x:70, y:300, width: 150, type: 'platform'},
-        {x:370, y:175, width: 250, type: 'platform'},
-        {x:400, y:350, width: 150, type: 'platform'},
-        {x:870, y:150, width: 150, type: 'platform'},
-        {x:830, y:300, width: 150, type: 'platform'},
-        {x:450, y:500, width: 700, type: 'platform'}, //ground
-        
-    ];
-
+    
     var platformBody = new b2BodyDef;
     var platformFix = new b2FixtureDef;
     
@@ -126,13 +126,14 @@ function createPlatforms() {
     for(var i = 0; i < platform_init.length; i++) {
         
         var platform = new Platform(i);
+        var platform_data = platform_init[i]
 
-        platformBody.position.x = platform_init[i].x / SCALE;
-        platformBody.position.y = platform_init[i].y / SCALE;
-        platformFix.userData = {'type': 'platform', 'id': platform_init[i].type};
+        platformBody.position.x = platform_data.x / SCALE;
+        platformBody.position.y = platform_data.y / SCALE;
+        platformFix.userData = {'type': 'platform', 'id': platform_data.type};
 
         platformFix.shape = new b2PolygonShape;
-        platformFix.shape.SetAsBox((platform_init[i].width / SCALE) / 2, (20/SCALE) / 2);
+        platformFix.shape.SetAsBox((platform_data.width / SCALE) / 2, 20 / SCALE / 2);
         
         platform.box2d = world.CreateBody(platformBody);
         platform.box2d.CreateFixture(platformFix);
@@ -162,8 +163,8 @@ function createPlayer() {
     var playerLegs = new b2FixtureDef;
 
     playerBody.type = b2Body.b2_dynamicBody;
-    playerBody.position.x = canvas.width / 2 / SCALE;
-    playerBody.position.y = (canvas.height / SCALE) - (150 / SCALE);
+    playerBody.position.x = CANVAS_WIDTH / 2 / SCALE;
+    playerBody.position.y = (CANVAS_HEIGHT / SCALE) - (150 / SCALE);
     playerBody.fixedRotation = true;
     playerBody.userData = {type: 'player'};
 
@@ -231,7 +232,7 @@ function createEnemies(count) {
         if(i % 2 === 0) {
             enemyBody.position.x = 0;
         } else {
-            enemyBody.position.x = canvas.width;
+            enemyBody.position.x = CANVAS_WIDTH;
         }
         
         enemyBody.position.y = (Math.random() * 600 / SCALE) - 80 / SCALE;
@@ -293,36 +294,36 @@ function renderPlayer() {
         }
     }
 
-    ctx.save();
-    ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
-    ctx.rotate(player.box2d.GetAngle());
+    game_ctx.save();
+    game_ctx.translate(player_pos.x * SCALE, player_pos.y * SCALE);
+    game_ctx.rotate(player.box2d.GetAngle());
     
     if(player.direction === 'left') {
-        ctx.scale(-1, 1);
-        ctx.drawImage(
+        game_ctx.scale(-1, 1);
+        game_ctx.drawImage(
             player.dude,         //image
             -16, -2,              // source position
             24, 14               // width/height
         );
-        ctx.drawImage(
+        game_ctx.drawImage(
             player.ostridge,     //image
             -17, 0,              // source position
             22, 34               // width/height
         );
     } else {
-        ctx.drawImage(
+        game_ctx.drawImage(
             player.dude,         //image
             0, -2,              // source position
             24, 14               // width/height
         );
-        ctx.drawImage(
+        game_ctx.drawImage(
             player.ostridge,   //image
             -3, 0,           // source position
             22, 34           // width/height
         );
         
     }
-    ctx.restore();
+    game_ctx.restore();
     player.flap_wings = false;
 }
 
@@ -346,36 +347,36 @@ function renderEnemy() {
             }
         }
 
-        ctx.save();
-        ctx.translate(enemy_pos.x * SCALE, enemy_pos.y * SCALE);
-        ctx.rotate(enemy.box2d.GetAngle());
+        game_ctx.save();
+        game_ctx.translate(enemy_pos.x * SCALE, enemy_pos.y * SCALE);
+        game_ctx.rotate(enemy.box2d.GetAngle());
         
         if(enemy.direction === 'left') {
-            ctx.scale(-1, 1);
-            ctx.drawImage(
+            game_ctx.scale(-1, 1);
+            game_ctx.drawImage(
                 enemy.dude,         //image
                 -16, -2,            // source position
                 24, 14              // width/height
             );
-            ctx.drawImage(
+            game_ctx.drawImage(
                 enemy.bird,     //image
                 -22, -5,        // source position
                 30, 40          // width/height
             );
         } else {
-            ctx.drawImage(
+            game_ctx.drawImage(
                 enemy.dude,         //image
                 0, -2,              // source position
                 24, 14               // width/height
             );
-            ctx.drawImage(
+            game_ctx.drawImage(
                 enemy.bird,   //image
                 -10, -5,           // source position
                 30, 40           // width/height
             );
             
         }
-        ctx.restore();
+        game_ctx.restore();
     }
 }
 
@@ -384,8 +385,8 @@ function renderEnemy() {
 function renderPlatforms() {
     for(var i = 0; i < platform.length; i++) {
         var platform = platforms[i];
-        // ctx.fillStyle = "rgba(0, 0, 0, .9)";
-        // ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // game_ctx.fillStyle = "rgba(0, 0, 0, .9)";
+        // game_ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
 }
 
@@ -587,7 +588,7 @@ function flapTheWings() {
 // ======================================================
 function checkBoundries(obj) {    
     // BOTTOM OF THE SCREEN
-    if (obj.box2d.GetPosition().y > canvas.height / SCALE){
+    if (obj.box2d.GetPosition().y > CANVAS_HEIGHT / SCALE){
         // take character off screen and then kill him silently :(
         obj.box2d.SetPosition(new b2Vec2(-999, -999));
 
@@ -595,12 +596,12 @@ function checkBoundries(obj) {
         if(obj.type === 'enemy') { killEnemy(obj, true) }
     }
     // LEFT OF THE SCREEN
-    else if (obj.box2d.GetPosition().x > canvas.width / SCALE) {
+    else if (obj.box2d.GetPosition().x > CANVAS_WIDTH / SCALE) {
         obj.box2d.SetPosition(new b2Vec2(0, obj.box2d.GetPosition().y)); 
     }
     // RIGHT OF THE SCREEN
     else if (obj.box2d.GetPosition().x < 0) {
-        obj.box2d.SetPosition(new b2Vec2(canvas.width / SCALE, obj.box2d.GetPosition().y)); 
+        obj.box2d.SetPosition(new b2Vec2(CANVAS_WIDTH / SCALE, obj.box2d.GetPosition().y)); 
     }
 }
 
