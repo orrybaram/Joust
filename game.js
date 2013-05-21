@@ -571,7 +571,16 @@ function detectCollisons() {
 // ======================================================
 function makeEnemyFly(enemy) {
         var vel = enemy.box2d.GetLinearVelocity();
-        vel.y = (Math.random() * -1) - 1.5;
+        var pos = enemy.box2d.GetPosition();
+
+        if (pos.y > 10) {
+            vel.y = (Math.random() * -1) * 8;
+        } else if (pos.y < 1){
+            vel.y = (Math.random() * -1) * -8;
+        } else {
+            vel.y = (Math.random() * -1) * 4;
+        }
+        
         if(enemy.direction === 'left') {
             vel.x = (Math.random() * -2) -2;
         } else {
